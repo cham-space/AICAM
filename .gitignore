@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# AI Agent runtime artifacts
+.agents/plans/*.md
+.agents/plans/*.summary.md
+.agents/specs/*.md
+.agents/reviews/*.md
+.agents/reports/*.md
+
+# Environment
+.env
+.env.*
+!.env.example
