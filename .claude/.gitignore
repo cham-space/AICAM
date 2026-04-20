@@ -1,0 +1,11 @@
+# Local settings (project-specific, not part of AICAM workflow)
+settings.local.json
+
+# Project-specific reference docs (generated per project by /ref-research)
+# These are project-specific outputs, not reusable workflow definitions
+reference/components.md
+reference/api.md
+reference/index.md
+
+# macOS
+.DS_Store
