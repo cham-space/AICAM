@@ -239,16 +239,20 @@ Run all verification commands fresh — evidence before assertions.
 {供后续 Phase 参考的流程或技术洞察}
 ```
 
-然后提示：
-> "Phase execution complete.  
-> **⚠️ MANDATORY NEXT STEP**: **Open a NEW conversation**, then run `/code-review {plan-file-path}`.  
-> 新开会话执行，确保 reviewer 上下文干净，避免实现经过污染判断。  
-> This is a **hard gate** — `/verify-phase` will warn and request confirmation if code review was skipped.
->
-> **Steps (in order)**:  
-> 1. 🆕 Open new conversation → `/code-review {plan-file-path}` — fix all Critical issues, review Important issues  
-> 2. `/verify-phase {plan-file-path}` — compliance audit (requires code review passed)  
-> 3. `/close-phase` → `/commit`"
+然后输出：
+
+> Phase execution complete. ✅
+
+## ⛔ 强制下一步（不可跳过）
+
+| 步骤 | 操作 | 说明 |
+|------|------|------|
+| 1 | 🆕 **关闭当前会话，开新会话** | ⚠️ 避免实现上下文污染 code-review 判断，必须在全新 context window 中执行 |
+| 2 | `/code-review {plan-file-path}` | Fix all Critical issues；review Important issues |
+| 3 | `/verify-phase {plan-file-path}` | 合规审计，需要 code-review 先通过 |
+| 4 | `/close-phase` → `/commit` | 归档并提交 |
+
+> **Hard gate**: `/verify-phase` 会检查 code-review 是否已完成，跳过将触发警告并要求确认。
 
 ## Notes
 
