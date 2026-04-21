@@ -120,6 +120,11 @@ Additionally enforce gate outcomes:
 - Business workflow tests must be evidenced by command output/artifacts
 - If API is involved, naming mapping consistency must be evidenced
 
+**⏸️ 状态硬规则**：
+- `⏸️ 需手动验证` 在任何 Gate 中均视为 ❌，不允许以此通过
+- Business Workflow Tests 状态为 ⏸️ → 必须提供可执行的自动化脚本（使用 mock/fixture），或用户明确书面确认"此 Phase 业务流程验证延期至下一 Phase"并在报告中标注风险
+- Smoke Test Log 缺失或存在 ⏸️ 条目 → Smoke Test Gate 状态为 ❌，阻断 Phase 关闭
+
 ---
 
 ### Step 6: Bug Catalogue
@@ -195,7 +200,9 @@ Result: ✅/❌ | {summary}
 | Gate | Status | Evidence |
 |------|--------|----------|
 | Unit Tests | ✅/❌ | {command + short output} |
-| Business Workflow Tests | ✅/❌ | {command/artifact path} |
+| Business Workflow Tests | ✅/❌ | {command/artifact path — ⏸️ 不可通过} |
+| Smoke Test | ✅/❌ | 读取 summary.md `## Smoke Test Log`；任何 ❌ 条目或 ⏸️ 状态均视为整体 ❌ |
+| Runtime Verified | ✅/❌ | 应用/服务实际启动过的证明（Smoke Test Log 中启动条目为 ✅） |
 | API Naming Consistency (if applicable) | ✅/❌/N/A | {mapping/check evidence} |
 | TDD Compliance | ✅/❌/N/A | {Read `## TDD Log` from summary.md — verify non-exempt task count matches TDD records; flag any missing entries or EXEMPT-without-user-confirmation entries} |
 
@@ -252,7 +259,7 @@ Files:     {X}/{total} present  ({Y} moved, {Z} missing)
 Commands:  {P}/{total} passed   ({Q} failed, {R} warned)
 Criteria:  {A}/{total} met      ({B} partial, {C} failed)
 Bugs:      {blocking} blocking, {non_blocking} non-blocking
-Mandatory Gates: Unit={PASS/FAIL}, Workflow={PASS/FAIL}, API Naming={PASS/FAIL/N/A}, TDD={PASS/FAIL/N/A}
+Mandatory Gates: Unit={PASS/FAIL}, Workflow={PASS/FAIL}, Smoke={PASS/FAIL}, Runtime={PASS/FAIL}, API Naming={PASS/FAIL/N/A}, TDD={PASS/FAIL/N/A}
 
 Report written to: .agents/reports/PHASE{N}_VERIFICATION_REPORT.md
 

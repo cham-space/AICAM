@@ -67,7 +67,16 @@ Before implementing each task:
 ```
 
 用户回复 `n` → 必须按 TDD 流程重新执行。  
-可申请豁免的情况：配置文件变更、数据库迁移脚本、纯样式/CSS 变更、注解/文档注释更新、依赖版本升级（无业务逻辑变更）。
+
+**可申请豁免的情况**：配置文件变更、数据库迁移脚本、纯样式/CSS 变更、注解/文档注释更新、依赖版本升级（无业务逻辑变更）。
+
+**不可豁免（强制 TDD）**：
+- 跨边界集成层（IPC 命令、REST endpoint、事件发布/订阅、消息队列消费者）
+- 前端/UI 组件中含有条件逻辑、状态管理、数据转换的部分
+- 任何序列化/反序列化逻辑
+- 错误处理路径
+
+> 申请上述类型豁免时，必须同时说明"**替代验证方式**"。若答案为"运行时手动看"，则驳回豁免申请，必须补写测试。
 
 ### 2. Execute Tasks in Order
 
@@ -138,6 +147,26 @@ If any command fails:
 - Unit tests must pass
 - Business workflow tests must pass (UI E2E or API workflow tests)
 - If API was touched, contract/naming validation from the plan must pass
+
+### 4.5 Smoke Test（强制，不可跳过）
+
+在所有验证命令通过后，执行计划文件 `## Smoke Test Checklist` 中的每一条：
+
+1. 使用计划中声明的启动命令启动应用/服务
+2. 逐条验证 Checklist 条目，记录 ✅ PASS / ❌ FAIL
+3. 任何 ❌ → 进入 bug 修复流程（systematic-debugging Skill），修复后重新执行完整 Smoke Test
+4. **全部 ✅ 才能继续生成 Summary**
+
+若计划文件缺少 `## Smoke Test Checklist` → **STOP**，提示：
+> ⚠ Plan 缺少 Smoke Test Checklist。请补充后重新执行，或明确确认此 Phase 无需运行时验证（需用户明确书面确认）。
+
+Smoke Test 结果写入 `.agents/plans/{phase-name}.summary.md` 的 `## Smoke Test Log` 节：
+```
+## Smoke Test Log
+- [ ] 启动无崩溃 ✅/❌
+- [ ] {功能路径 A}：{操作} → {预期结果} ✅/❌
+- [ ] {功能路径 B}：{操作} → {预期结果} ✅/❌
+```
 
 ### 5. Final Verification
 
@@ -237,6 +266,10 @@ Run all verification commands fresh — evidence before assertions.
 
 ## 经验教训
 {供后续 Phase 参考的流程或技术洞察}
+
+## Smoke Test Log
+- [ ] {条目 1}：{操作} → {预期结果} ✅/❌
+- [ ] {条目 2}：{操作} → {预期结果} ✅/❌
 ```
 
 然后输出：

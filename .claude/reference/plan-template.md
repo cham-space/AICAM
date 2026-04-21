@@ -158,6 +158,27 @@ Use information-dense keywords for clarity:
 
 ---
 
+## Smoke Test Checklist
+
+<!-- 必填。每条为"操作 → 预期结果"格式，应用/服务启动后逐条验证。缺少此节将导致 /execute 停止执行。 -->
+
+**启动命令**: `{command to start app/service}`
+
+- [ ] 应用/服务正常启动，无崩溃
+- [ ] {核心功能 A}：{操作步骤} → {预期结果}
+- [ ] {核心功能 B}：{操作步骤} → {预期结果}
+- [ ] 重启/二次启动不崩溃，数据保留
+
+## Mock Strategy
+
+<!-- 必填。说明业务流程测试如何不依赖真实外部服务。 -->
+
+| 外部依赖 | Mock 方案 | 工具/库 |
+|---------|---------|---------|
+| {外部 API / DB / 第三方服务} | {预设响应 fixture / 内存 DB / stub} | {工具名} |
+
+---
+
 ## TESTING STRATEGY
 
 <Define testing approach based on project's test framework and patterns discovered in during research>

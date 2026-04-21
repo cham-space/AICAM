@@ -17,6 +17,22 @@ Close a completed implementation phase by **extracting key decisions, bugs, and 
 
 ## Process
 
+### Step 0: 前置条件检查（不满足则拒绝关闭）
+
+在执行任何归档操作前，逐条检查以下条件：
+
+| 条件 | 检查方式 | 未满足时 |
+|------|---------|---------|
+| Verification Report 存在且状态为 ✅ 或 ⚠ | 读取 `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` 的核验状态行 | STOP |
+| Smoke Test Log 全部 ✅（无 ❌ 无 ⏸️） | 读取 `.agents/plans/{phase}.summary.md` 的 `## Smoke Test Log` 节 | STOP：列出 ❌/⏸️ 项，要求修复后重新提交 |
+| 无 ⏸️ 未关闭 Gate 项 | 扫描 Verification Report 的 Mandatory Gates 表格 | STOP：列出所有 ⏸️ 项 |
+| P0 Bug 全部已修复 | 读取 Verification Report 七、修复优先级，检查 P0 阻塞行 | STOP：列出未修复 P0 项 |
+
+若所有条件满足，输出：`✅ 前置条件通过，开始关闭 Phase。`  
+若任一不满足，输出：`❌ Phase 不满足关闭条件：{未满足项列表}` 并终止，不执行后续步骤。
+
+---
+
 ### Step 1: Detect Completed Phase Artifacts
 
 Scan workspace for phase-related documents using dynamic detection:
@@ -182,6 +198,20 @@ If any file is marked CHANGED:
 
 If no changes are detected, output:
 > ✅ Reference files unchanged. No update needed.
+
+---
+
+### Step 7.5: 更新 TEST_DASHBOARD.md
+
+在完成归档后，更新 `.agents/reports/TEST_DASHBOARD.md`（不存在则创建）：
+
+1. 在"Phase 覆盖矩阵"和"跨 Phase 趋势"表中追加/更新本 Phase 的一行
+2. 在本 Phase 的详细区块中填入：
+   - Gate 汇总（从 Verification Report Mandatory Gates 表读取）
+   - 单元测试明细（从 summary.md Test Cases 读取）
+   - Smoke Test 明细（从 summary.md Smoke Test Log 读取，含每条操作→预期→结果）
+   - 业务流程测试明细（从 summary.md Business Workflow Tests 读取，含 Mock 方案）
+3. TEST_DASHBOARD.md **不加入 CLAUDE.md context loading**，仅供人工查阅
 
 ---
 
