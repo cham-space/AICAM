@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.0.0 | 2026-04-19
+> 版本: v1.1.0 | 2026-04-21
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -9,7 +9,7 @@
 
 | 版本 | 日期 | 变更说明 |
 |------|------|----------|
-| v1.0.0 | 2026-04-19 | 初始版本：5 Phase 工作流 + 10 命令 + 5 技能 + Mermaid 可视化 |
+| v1.1.0 | 2026-04-21 | 新增 Smoke Test 门禁、TDD 不可豁免范围收紧、⏸️ 状态硬规则、TEST_DASHBOARD 跟踪、技能列表校准（frontend-design 替换 skill-creator） |
 
 ---
 
@@ -34,8 +34,8 @@
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
 | **组件（Commands）** | `.claude/commands/` | 12 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit` |
-| **技能（Skills）** | `.claude/skills/` | 5 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`ui-ux-pro-max`、`skill-creator` |
-| **参考文档** | `.claude/reference/` | 4 个 | `index.md`、`components.md`、`api.md`、`plan-template.md`、`spec-lite-template.md` |
+| **技能（Skills）** | `.claude/skills/` | 5 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design`、`ui-ux-pro-max` |
+| **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
 | **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件 |
 | **计划与规格** | `.agents/` | 2 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格 |
 
@@ -209,6 +209,8 @@ graph LR
 | **动作** | 先写目标功能的失败测试 → 运行确认红灯 → 再写最小实现代码 → 运行确认绿灯 |
 | **核心原则** | 未见失败测试 = 不知道测试是否有效；跳过红灯阶段即违反 TDD |
 | **例外** | 配置文件、迁移脚本、纯样式变更可申请豁免；但 Agent 不得自行决定，必须暂停展示申请并等待用户确认（y/n） |
+| **不可豁免（强制 TDD）** | 跨边界集成层（IPC 命令、REST endpoint、事件发布/订阅、消息队列消费者）；前端/UI 组件中含有条件逻辑、状态管理、数据转换的部分；任何序列化/反序列化逻辑；错误处理路径 |
+| **豁免申请规则** | 申请上述类型豁免时，必须同时说明"替代验证方式"。若答案为"运行时手动看"，则驳回豁免申请，必须补写测试 |
 | **下一步** | → 2-B |
 
 ### 节点 2-B：按计划实施
@@ -247,6 +249,18 @@ graph LR
 | **前置条件** | 若无前端，则改为 API 级业务流程测试，不可跳过 |
 | **下一步** | → 3-A |
 
+### 节点 2-E：Smoke Test（强制，不可跳过）
+
+| 项目 | 内容 |
+|------|------|
+| **命令** | `/execute` 内嵌步骤 |
+| **触发方式** | **自动**，所有验证命令通过后必须执行 |
+| **执行角色** | Agent |
+| **动作** | 1. 读取计划文件 `## Smoke Test Checklist`，逐条验证<br>2. 启动应用/服务 → 验证无崩溃<br>3. 逐条执行 Checklist 条目，记录 ✅ PASS / ❌ FAIL<br>4. 任何 ❌ → 进入 bug 修复流程，修复后重新执行完整 Smoke Test |
+| **门禁规则** | 计划文件缺少 `## Smoke Test Checklist` → STOP，提示补充或需用户书面确认跳过<br>全部 ✅ 才能生成 Summary<br>结果写入 `.agents/plans/{phase-name}.summary.md` 的 `## Smoke Test Log` 节 |
+| **产出物** | summary.md 中的 `## Smoke Test Log` 表格（含操作→预期→结果） |
+| **下一步** | → 3-A |
+
 ---
 
 ## 6. Phase 3：核验
@@ -279,6 +293,7 @@ graph LR
 | **产出物** | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` —— 标准化核验报告 |
 | **报告结构** | 环境依赖 / Task 完成情况 / 验证命令结果 / Bug 清单 / 验收标准 / 修复优先级 |
 | **强制核验项** | 必须包含 `Unit Tests` 与 `Business Workflow Tests` 的命令输出与结论；涉及 API 时必须包含命名映射一致性结论 |
+| **⏸️ 状态硬规则** | `⏸️ 需手动验证` 在任何 Gate 中均视为 ❌，不允许以此通过；Business Workflow Tests 为 ⏸️ 时必须提供可执行的自动化脚本（使用 mock/fixture），或用户明确书面确认"延期至下一 Phase"并标注风险；Smoke Test Log 缺失或存在 ⏸️ 条目 → Smoke Test Gate 状态为 ❌，阻断 Phase 关闭 |
 | **核心原则** | Evidence over assumption；验证是只读的，不自动大范围修改代码 |
 | **下一步** | 用户查看报告 → 决定修复 Bug → 4-A |
 
@@ -295,10 +310,22 @@ graph LR
 | **命令** | `/close-phase [phase-name]` |
 | **触发方式** | 手动，核验报告产出后、用户确认可归档 |
 | **执行角色** | Agent（**操作前展示预览，等待用户确认**） |
-| **动作** | 扫描 Phase 产物 → 提取 Bug/偏差/教训 → 写入 CLAUDE.md 迭代日志（15-30 行） → 将详细文件 mv 到 `archive/` → 清理冗余副本 |
+| **动作** | 扫描 Phase 产物 → 提取 Bug/偏差/教训 → 写入 CLAUDE.md 迭代日志（15-30 行） → 将详细文件 mv 到 `archive/` → 清理冗余副本 → 更新 `.agents/reports/TEST_DASHBOARD.md` |
 | **产出物** | 更新后的 `CLAUDE.md`（含迭代日志条目） + `archive/` 中的历史文件 |
 | **安全规则** | 不归档 CLAUDE.md / PRD.md / 进行中的 Phase；移动前必须用户确认 |
 | **上下文收益** | 将数百行原始文档压缩为 15-30 行摘要，释放 AI 上下文预算 |
+| **下一步** | → 5-A |
+
+### 节点 4-B：更新测试仪表盘
+
+| 项目 | 内容 |
+|------|------|
+| **命令** | `/close-phase` 内嵌步骤 |
+| **触发方式** | 自动，归档完成后 |
+| **执行角色** | Agent |
+| **动作** | 1. 更新 `.agents/reports/TEST_DASHBOARD.md`（不存在则创建）<br>2. 追加/更新本 Phase 一行到"Phase 覆盖矩阵"和"跨 Phase 趋势"表<br>3. 填入 Gate 汇总（从 Verification Report）、单元测试明细、Smoke Test 明细（含每条操作→预期→结果）、业务流程测试明细（含 Mock 方案） |
+| **产出物** | 更新后的 `TEST_DASHBOARD.md` |
+| **上下文规则** | TEST_DASHBOARD.md **不加入 CLAUDE.md context loading**，仅供人工查阅 |
 | **下一步** | → 5-A |
 
 ---
@@ -339,15 +366,17 @@ graph TD
         P2A["TDD前置\n先写失败测试"] --> P2B["/execute\n逐Task实施"]
         P2B --> P2C["api-contract-first\nAPI合约检查"]
         P2C --> P2D["业务功能测试\ne2e或API业务流"]
+        P2D --> P2E["Smoke Test\n强制运行时验证"]
     end
 
     subgraph Phase3["Phase 3：核验"]
         P3A["/code-review\n强制执行 · 多语言"] --> P3B["/verify-phase\n证据驱动核验"]
-        P3B --> P3R["产出\nVERIFICATION_REPORT.md"]
+        P3B --> P3R["产出\nVERIFICATION_REPORT.md\n(含Smoke+Runtime门禁)"]
     end
 
     subgraph Phase4["Phase 4：归档"]
-        P4A["/close-phase\n提炼知识+归档文件"] --> P4R["更新CLAUDE.md迭代日志"]
+        P4A["/close-phase\n提炼知识+归档文件"] --> P4B["更新TEST_DASHBOARD\n测试仪表盘"]
+        P4B --> P4R["更新CLAUDE.md迭代日志"]
     end
 
     subgraph Phase5["Phase 5：提交"]
@@ -369,9 +398,9 @@ graph TD
     classDef phase5 fill:#fff8e1
     class P0A,P0B,P0C,P0D,P0E,P0F phase0
     class P1A,P1B,P1C phase1
-    class P2A,P2B,P2C,P2D phase2
+    class P2A,P2B,P2C,P2D,P2E phase2
     class P3A,P3B,P3R phase3
-    class P4A,P4R phase4
+    class P4A,P4B,P4R phase4
     class P5A phase5
 ```
 
@@ -399,6 +428,7 @@ graph TD
 | `.agents/plans/{phase}.md` | `/plan-feature` | 执行后 → `archive/` |
 | `.agents/plans/{phase}.summary.md` | `/execute` 末尾自动 | 执行后 → `archive/` |
 | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` | `/verify-phase` | 核验后 → `archive/` |
+| `.agents/reports/TEST_DASHBOARD.md` | `/close-phase` | 永久保留，人工查阅 |
 | `CLAUDE.md 迭代日志条目` | `/close-phase` | 永久保留（压缩形式） |
 | Git 提交 | `/commit` | 版本历史 |
 
@@ -415,7 +445,16 @@ graph TD
 ├── commands/                   # 12 个 slash 命令脚本（/discover、/execute 等）
 ├── skills/                     # 领域专项 Skill（api-contract-first、ui-ux-pro-max 等）
 ├── reference/                  # 按需加载的参考文档（components.md、api.md 等）
-│   └── index.md                # 参考文档索引，说明各文档的加载时机
+│   ├── index.md                # 参考文档索引，说明各文档的加载时机
+│   ├── plan-template.md        # 功能实施计划模板（含 Smoke Test Checklist + Mock Strategy）
+│   ├── spec-lite-template.md   # 轻量规格模板
+│   └── test-strategies/        # 6 种项目类型的测试策略
+│       ├── cli.md              # CLI 项目测试策略
+│       ├── mobile.md           # 移动端测试策略
+│       ├── rest-api.md         # REST API 测试策略
+│       ├── tauri.md            # Tauri 桌面应用测试策略
+│       ├── web.md              # Web 应用测试策略
+│       └── worker.md           # Worker/服务端测试策略
 ├── CLAUDE-template.md          # 新项目初始化时的 CLAUDE.md 种子文件
 └── WORKFLOW.md                 # 本文档：工作流全局说明
 
@@ -507,6 +546,7 @@ CLAUDE.md 迭代日志
 | `api-contract-first` | 操作 API 控制器/业务服务/数据传输层目录；或用户提到 "API contract"、"OpenAPI"、"swagger"、"frontend-backend"、"field mapping"；**涉及 API 即强制执行命名映射核验** |
 | `e2e-test` | 有前端且进入业务功能测试阶段时自动建议并默认执行 |
 | `agent-browser` | `e2e-test` Skill 内部调用 |
+| `frontend-design` | 涉及前端 UI 组件/页面/样式实现时自动加载；用户提到 "组件"、"页面"、"样式"、"布局"、"响应式"、"动画" |
 | `ui-ux-pro-max` | 涉及前端 UI 设计/组件/配色/布局/动效时自动加载；用户提到 "UI"、"UX"、"设计"、"样式"、"组件"、"配色"、"dark mode"、"响应式" |
 | `skill-creator` | 需要创建、修改、优化或评估任何 Skill 本身时加载；用于保持工作流 skill 的质量与触发准确性。加载路径：VS Code 扩展内置，非工作区 `.claude/skills/` |
 | `test-driven-development`（superpowers 内置） | **Phase 2 实施每个 Task 前自动加载**；实现新功能、修复 bug、重构行为变更时，要求先写失败测试再写实现代码 |
@@ -530,19 +570,22 @@ CLAUDE.md 迭代日志
 2. **计划不写代码**，实施不改计划结构（发现需要改计划，先暂停与用户确认）
 3. **验证命令失败必须修复**，不允许跳过进入下一步
 4. **每个 Phase 必须通过双层测试门禁**：`Unit Tests` + `Business Workflow Tests`
+4.5. **每个 Phase 必须通过 Smoke Test**：计划中声明的 `Smoke Test Checklist` 全部 ✅ 才能归档
 5. **涉及 API 必须有 Spec + 命名映射表**，并通过 `api-contract-first` 一致性核验
 6. **归档前必须用户确认**，`/close-phase` 展示预览后等待确认
 7. **CLAUDE.md 是唯一的活体上下文**，所有历史知识压缩提炼于此
 8. **高危数据操作必须用户确认**：`TRUNCATE`、`DROP`、无条件 `DELETE` 等不可逆操作，Agent 必须停止执行、展示影响范围，等待用户明确确认，不允许自动推进；迁移脚本禁止包含 `TRUNCATE`/`DROP TABLE`，数据清理必须走独立 data-fix 脚本
-9. **命令文件风格约定**：过程指令使用英文（AI 理解更精确），输出模板/报告使用中文（面向用户阅读）
-10. **Phase 0-A 设计未审批**（路径 B）或**需求缺口未解决**（路径 A），不进入 0-B（`/create-prd`）
-11. **CLAUDE.md 迭代日志超过 150 行自动压缩**，保留最近 2 个 Phase 的完整条目，早期 Phase 压缩为单行摘要（范围 + 关键 Bug/教训 + `archive/` 指引）。
-12. **Skill 加载优先级**：项目命令 > superpowers 补充 Skill > 其他 Skill。当项目命令已包含某能力时，不额外加载 superpowers 同功能 Skill：
+8.5. **⏸️ 状态硬规则**：`⏸️ 需手动验证` 在任何门禁中均视为 ❌，不允许以此通过 Phase
+9. **TDD 不可豁免范围**：跨边界集成层（IPC/REST/事件/消息队列）、含条件逻辑的 UI 组件、序列化/反序列化逻辑、错误处理路径。申请豁免需同时说明替代验证方式
+10. **命令文件风格约定**：过程指令使用英文（AI 理解更精确），输出模板/报告使用中文（面向用户阅读）
+11. **Phase 0-A 设计未审批**（路径 B）或**需求缺口未解决**（路径 A），不进入 0-B（`/create-prd`）
+12. **CLAUDE.md 迭代日志超过 150 行自动压缩**，保留最近 2 个 Phase 的完整条目，早期 Phase 压缩为单行摘要（范围 + 关键 Bug/教训 + `archive/` 指引）。
+13. **Skill 加载优先级**：项目命令 > superpowers 补充 Skill > 其他 Skill。当项目命令已包含某能力时，不额外加载 superpowers 同功能 Skill：
     - `/discover` 已包含头脑风暴 → 不加载 `brainstorming`
     - `/plan-feature` 已包含规划 → 不加载 `writing-plans`
     - `/execute` 已包含实施 → 不加载 `executing-plans` / `subagent-driven-development`
     仅加载 superpowers 的纪律检查类 Skill：`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`requesting-code-review` + `receiving-code-review`、`dispatching-parallel-agents`。
-13. **不使用的 superpowers Skills**（与项目架构冲突）：
+14. **不使用的 superpowers Skills**（与项目架构冲突）：
     - `executing-plans` / `subagent-driven-development`：强制 git worktree，项目使用当前分支直接执行
     - `finishing-a-development-branch`：处理 PR/merge 流，项目用 /commit
     - `using-git-worktrees`：项目不支持 worktree 模式

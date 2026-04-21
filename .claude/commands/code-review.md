@@ -31,23 +31,23 @@ If `$ARGUMENTS` is a phase name → scan:
 Scan `.agents/plans/` and list all `*.md` files sorted by last-modified time (newest first).  
 Present the list to the user and ask:
 ```
-以下是检测到的 plan 文件（按修改时间排序）：
-  1. .agents/plans/phase1-xxx.md       ← 推荐（最近修改）
+Detected plan files (sorted by modification time):
+  1. .agents/plans/phase1-xxx.md       ← recommended (most recently modified)
   2. .agents/plans/phase1-xxx.summary.md
   3. .agents/plans/phase2-xxx.md
   ...
 
-请选择要 review 的文件编号，或直接输入路径（留空默认选 1）：
+Please select a file number, or enter a path directly (leave empty to default to 1):
 ```
 Wait for user confirmation before proceeding. Use the selected file as the plan.  
 If `.agents/plans/` is empty → abort: `❌ No plan files found. Run /plan-feature first.`
 
 **After resolving the plan file (any path above), confirm with user before continuing:**
 ```
-📋 将对以下 plan 文件执行 code review：
+📋 Code review will be performed on the following plan file:
    {resolved-plan-path}
 
-确认继续？(y/n，留空默认 y)
+Confirm to proceed? (y/n, leave empty for y)
 ```
 Wait for confirmation. If user says n → abort and ask them to specify the correct plan path.
 

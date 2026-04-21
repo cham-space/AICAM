@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.0.0 | 2026-04-19
+> Version: v1.1.0 | 2026-04-21
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -9,7 +9,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
-| v1.0.0 | 2026-04-19 | Initial release: 5-phase workflow + 10 commands + 5 skills + Mermaid visualizations |
+| v1.1.0 | 2026-04-21 | Added Smoke Test gate, tightened TDD exemption scope, ⏸️ hard-fail rule, TEST_DASHBOARD tracking, skills list correction (frontend-design replaces skill-creator) |
 
 ---
 
@@ -34,8 +34,8 @@
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
 | **Commands** | `.claude/commands/` | 12 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit` |
-| **Skills** | `.claude/skills/` | 5 | `agent-browser`, `api-contract-first`, `e2e-test`, `ui-ux-pro-max`, `skill-creator` |
-| **Reference Docs** | `.claude/reference/` | 4 | `index.md`, `components.md`, `api.md`, `plan-template.md`, `spec-lite-template.md` |
+| **Skills** | `.claude/skills/` | 5 | `agent-browser`, `api-contract-first`, `e2e-test`, `frontend-design`, `ui-ux-pro-max` |
+| **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
 | **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization |
 | **Plans & Specs** | `.agents/` | 2 subdirectories | `plans/` stores implementation plans, `specs/` stores lightweight specs |
 
@@ -209,6 +209,8 @@ graph LR
 | **Actions** | Write failing test for the target feature → run and confirm red → write minimal implementation code → run and confirm green |
 | **Core Principle** | No failing test seen = don't know if the test is valid; skipping the red phase violates TDD |
 | **Exceptions** | Config files, migration scripts, pure style changes may apply for exemption; but the Agent cannot decide unilaterally — must pause, display the request, and wait for user confirmation (y/n) |
+| **Non-Exempt (Mandatory TDD)** | Cross-boundary integration layers (IPC commands, REST endpoints, event pub/sub, message queue consumers); frontend/UI components with conditional logic, state management, data transformation; any serialization/deserialization logic; error handling paths |
+| **Exemption Request Rule** | When requesting exemption for the above types, must also state the "alternative verification method." If the answer is "manual runtime inspection," the exemption is rejected — tests must be written |
 | **Next Step** | → 2-B |
 
 ### Node 2-B: Implement According to Plan
@@ -247,6 +249,18 @@ graph LR
 | **Prerequisite** | If no frontend, switch to API-level business flow testing — cannot be skipped |
 | **Next Step** | → 3-A |
 
+### Node 2-E: Smoke Test (Mandatory, Cannot Be Skipped)
+
+| Item | Content |
+|------|---------|
+| **Command** | `/execute` embedded step |
+| **Trigger** | **Automatic**, must execute after all verification commands pass |
+| **Role** | Agent |
+| **Actions** | 1. Read plan file `## Smoke Test Checklist`, verify each item<br>2. Start app/service → verify no crash<br>3. Execute each Checklist item, record ✅ PASS / ❌ FAIL<br>4. Any ❌ → enter bug fix flow, re-run full Smoke Test after fix |
+| **Gate Rule** | Plan missing `## Smoke Test Checklist` → STOP, prompt to add or require written user confirmation to skip<br>All ✅ required to generate Summary<br>Results written to `.agents/plans/{phase-name}.summary.md` `## Smoke Test Log` section |
+| **Output** | `## Smoke Test Log` table in summary.md (with operation → expected → result) |
+| **Next Step** | → 3-A |
+
 ---
 
 ## 6. Phase 3: Verification
@@ -279,6 +293,7 @@ graph LR
 | **Output** | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` — standardized verification report |
 | **Report Structure** | Environment dependencies / Task completion / Verification command results / Bug catalog / Acceptance criteria / Fix priorities |
 | **Mandatory Verification Items** | Must include `Unit Tests` and `Business Workflow Tests` command output and conclusions; API features must include naming mapping consistency conclusions |
+| **⏸️ State Hard Rule** | `⏸️ Requires manual verification` is treated as ❌ in any Gate, cannot be used to pass; Business Workflow Tests at ⏸️ must provide executable automated scripts (using mock/fixture), or explicit written user confirmation "deferred to next Phase" with risk noted in report; Smoke Test Log missing or containing ⏸️ entries → Smoke Test Gate status ❌, blocks Phase closure |
 | **Core Principle** | Evidence over assumption; verification is read-only, no automatic wide-scale code modifications |
 | **Next Step** | User reviews report → decides to fix bugs → 4-A |
 
@@ -295,10 +310,22 @@ graph LR
 | **Command** | `/close-phase [phase-name]` |
 | **Trigger** | Manual, after verification report is produced and user confirms archiving |
 | **Role** | Agent (**preview shown before operation, waits for user confirmation**) |
-| **Actions** | Scan Phase artifacts → extract bugs/deviations/lessons → write to CLAUDE.md iteration log (15-30 lines) → move detailed files to `archive/` → clean up redundant copies |
+| **Actions** | Scan Phase artifacts → extract bugs/deviations/lessons → write to CLAUDE.md iteration log (15-30 lines) → move detailed files to `archive/` → clean up redundant copies → update `.agents/reports/TEST_DASHBOARD.md` |
 | **Output** | Updated `CLAUDE.md` (with iteration log entries) + historical files in `archive/` |
 | **Safety Rules** | Do not archive CLAUDE.md / PRD.md / in-progress Phases; user must confirm before moving files |
 | **Context Benefit** | Compresses hundreds of lines of original documents into 15-30 line summaries, freeing AI context budget |
+| **Next Step** | → 5-A |
+
+### Node 4-B: Update Test Dashboard
+
+| Item | Content |
+|------|---------|
+| **Command** | `/close-phase` embedded step |
+| **Trigger** | Automatic, after archiving completes |
+| **Role** | Agent |
+| **Actions** | 1. Update `.agents/reports/TEST_DASHBOARD.md` (create if not exists)<br>2. Append/update this Phase's row in "Phase Coverage Matrix" and "Cross-Phase Trends" tables<br>3. Fill in Gate summary (from Verification Report), unit test details, Smoke Test details (with operation → expected → result per item), business workflow test details (with Mock strategy) |
+| **Output** | Updated `TEST_DASHBOARD.md` |
+| **Context Rule** | TEST_DASHBOARD.md is **not added to CLAUDE.md context loading**, for human review only |
 | **Next Step** | → 5-A |
 
 ---
@@ -339,15 +366,17 @@ graph TD
         P2A["TDD First\nWrite Failing Tests First"] --> P2B["/execute\nTask-by-Task Implementation"]
         P2B --> P2C["api-contract-first\nAPI Contract Check"]
         P2C --> P2D["Business Function Testing\nE2E or API Business Flow"]
+        P2D --> P2E["Smoke Test\nMandatory Runtime Verification"]
     end
 
     subgraph Phase3["Phase 3: Verification"]
         P3A["/code-review\nMandatory · Multi-Language"] --> P3B["/verify-phase\nEvidence-Driven Verification"]
-        P3B --> P3R["Output\nVERIFICATION_REPORT.md"]
+        P3B --> P3R["Output\nVERIFICATION_REPORT.md\n(with Smoke+Runtime Gates)"]
     end
 
     subgraph Phase4["Phase 4: Archival"]
-        P4A["/close-phase\nDistill Knowledge + Archive Files"] --> P4R["Update CLAUDE.md Iteration Log"]
+        P4A["/close-phase\nDistill Knowledge + Archive Files"] --> P4B["Update TEST_DASHBOARD\nTest Dashboard"]
+        P4B --> P4R["Update CLAUDE.md Iteration Log"]
     end
 
     subgraph Phase5["Phase 5: Commit"]
@@ -369,9 +398,9 @@ graph TD
     classDef phase5 fill:#fff8e1
     class P0A,P0B,P0C,P0D,P0E,P0F phase0
     class P1A,P1B,P1C phase1
-    class P2A,P2B,P2C,P2D phase2
+    class P2A,P2B,P2C,P2D,P2E phase2
     class P3A,P3B,P3R phase3
-    class P4A,P4R phase4
+    class P4A,P4B,P4R phase4
     class P5A phase5
 ```
 
@@ -399,6 +428,7 @@ graph TD
 | `.agents/plans/{phase}.md` | `/plan-feature` | After execution → `archive/` |
 | `.agents/plans/{phase}.summary.md` | Auto at end of `/execute` | After execution → `archive/` |
 | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` | `/verify-phase` | After verification → `archive/` |
+| `.agents/reports/TEST_DASHBOARD.md` | `/close-phase` | Permanently retained, human review only |
 | `CLAUDE.md Iteration Log Entry` | `/close-phase` | Permanently retained (compressed form) |
 | Git Commit | `/commit` | Version history |
 
@@ -415,7 +445,16 @@ graph TD
 ├── commands/                   # 12 slash command scripts (/discover, /execute, etc.)
 ├── skills/                     # Domain-specific skills (api-contract-first, ui-ux-pro-max, etc.)
 ├── reference/                  # On-demand reference documents (components.md, api.md, etc.)
-│   └── index.md                # Reference document index, describing when each doc is loaded
+│   ├── index.md                # Reference document index, describing when each doc is loaded
+│   ├── plan-template.md        # Feature implementation plan template (includes Smoke Test Checklist + Mock Strategy)
+│   ├── spec-lite-template.md   # Lightweight spec template
+│   └── test-strategies/        # 6 type-specific test strategies
+│       ├── cli.md              # CLI project test strategy
+│       ├── mobile.md           # Mobile app test strategy
+│       ├── rest-api.md         # REST API test strategy
+│       ├── tauri.md            # Tauri desktop app test strategy
+│       ├── web.md              # Web app test strategy
+│       └── worker.md           # Worker/server-side test strategy
 ├── CLAUDE-template.md          # Seed file for CLAUDE.md during new project initialization
 └── WORKFLOW.md                 # This document: global workflow description
 
@@ -507,6 +546,7 @@ CLAUDE.md iteration log
 | `api-contract-first` | Operating on API controller / business service / data transfer layer directories; or user mentions "API contract", "OpenAPI", "swagger", "frontend-backend", "field mapping"; **API involvement mandates naming mapping verification** |
 | `e2e-test` | Auto-suggested and default execution when a frontend exists and entering the business function testing stage |
 | `agent-browser` | Called internally by `e2e-test` Skill |
+| `frontend-design` | Auto-loaded when frontend UI components/pages/styles implementation is involved; user mentions "component", "page", "style", "layout", "responsive", "animation" |
 | `ui-ux-pro-max` | Auto-loaded when frontend UI design / components / color schemes / layouts / animations are involved; user mentions "UI", "UX", "design", "styles", "components", "color scheme", "dark mode", "responsive" |
 | `skill-creator` | Loaded when creating, modifying, optimizing, or evaluating any Skill itself; used to maintain workflow skill quality and trigger accuracy. Load path: VS Code extension built-in, not workspace `.claude/skills/` |
 | `test-driven-development` (superpowers built-in) | **Auto-loaded before every Task in Phase 2**; when implementing new features, fixing bugs, refactoring with behavior changes, requires writing failing tests before implementation code |
@@ -530,19 +570,22 @@ CLAUDE.md iteration log
 2. **Plans don't write code; implementations don't change plan structure** (if a plan needs changing, pause and confirm with the user first).
 3. **Verification command failures must be fixed** — never skipped to proceed to the next step.
 4. **Every Phase must pass dual-layer test gates**: `Unit Tests` + `Business Workflow Tests`.
+4.5. **Every Phase must pass Smoke Test**: all items in the plan's `Smoke Test Checklist` must be ✅ before archiving.
 5. **API features require a Spec + naming mapping table**, verified via `api-contract-first` consistency check.
 6. **Archiving requires user confirmation** — `/close-phase` shows a preview and waits for confirmation.
 7. **CLAUDE.md is the only living context** — all historical knowledge is compressed and distilled here.
 8. **High-risk data operations require user confirmation**: `TRUNCATE`, `DROP`, unconditional `DELETE` and other irreversible operations require the Agent to stop, display the impact scope, and wait for explicit user confirmation — no automatic progression; migration scripts must not contain `TRUNCATE`/`DROP TABLE`; data cleanup must go through independent data-fix scripts.
-9. **Command file style convention**: Process instructions use English (for better AI comprehension), output templates/reports use Chinese (for user readability).
-10. **Phase 0-A design not approved** (Path B) or **requirement gaps unresolved** (Path A) → do not proceed to 0-B (`/create-prd`).
-11. **CLAUDE.md iteration logs exceeding 150 lines are auto-compressed**, retaining full entries for the most recent 2 Phases; earlier Phases are compressed to single-line summaries (scope + key bugs/lessons + `archive/` pointer).
-12. **Skill loading priority**: Project commands > superpowers supplemental skills > other skills. When a project command already includes a capability, the equivalent superpowers skill is not additionally loaded:
+8.5. **⏸️ State hard rule**: `⏸️ Requires manual verification` is treated as ❌ in any gate, cannot be used to pass a Phase.
+9. **TDD non-exempt scope**: cross-boundary integration layers (IPC/REST/events/message queues), UI components with conditional logic, serialization/deserialization logic, error handling paths. Exemption requests must include alternative verification method.
+10. **Command file style convention**: Process instructions use English (for better AI comprehension), output templates/reports use Chinese (for user readability).
+11. **Phase 0-A design not approved** (Path B) or **requirement gaps unresolved** (Path A) → do not proceed to 0-B (`/create-prd`).
+12. **CLAUDE.md iteration logs exceeding 150 lines are auto-compressed**, retaining full entries for the most recent 2 Phases; earlier Phases are compressed to single-line summaries (scope + key bugs/lessons + `archive/` pointer).
+13. **Skill loading priority**: Project commands > superpowers supplemental skills > other skills. When a project command already includes a capability, the equivalent superpowers skill is not additionally loaded:
     - `/discover` includes brainstorming → do not load `brainstorming`
     - `/plan-feature` includes planning → do not load `writing-plans`
     - `/execute` includes implementation → do not load `executing-plans` / `subagent-driven-development`
     Only load superpowers' discipline-check skills: `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `requesting-code-review` + `receiving-code-review`, `dispatching-parallel-agents`.
-13. **Unused superpowers Skills** (conflict with project architecture):
+14. **Unused superpowers Skills** (conflict with project architecture):
     - `executing-plans` / `subagent-driven-development`: Enforce git worktree; project uses current branch for direct execution.
     - `finishing-a-development-branch`: Handles PR/merge flows; project uses /commit.
     - `using-git-worktrees`: Project does not support worktree mode.

@@ -17,19 +17,19 @@ Close a completed implementation phase by **extracting key decisions, bugs, and 
 
 ## Process
 
-### Step 0: 前置条件检查（不满足则拒绝关闭）
+### Step 0: Pre-condition Check (refuse to close if not met)
 
-在执行任何归档操作前，逐条检查以下条件：
+Before executing any archiving operations, verify each condition:
 
-| 条件 | 检查方式 | 未满足时 |
+| Condition | How to Check | If Not Met |
 |------|---------|---------|
-| Verification Report 存在且状态为 ✅ 或 ⚠ | 读取 `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` 的核验状态行 | STOP |
-| Smoke Test Log 全部 ✅（无 ❌ 无 ⏸️） | 读取 `.agents/plans/{phase}.summary.md` 的 `## Smoke Test Log` 节 | STOP：列出 ❌/⏸️ 项，要求修复后重新提交 |
-| 无 ⏸️ 未关闭 Gate 项 | 扫描 Verification Report 的 Mandatory Gates 表格 | STOP：列出所有 ⏸️ 项 |
-| P0 Bug 全部已修复 | 读取 Verification Report 七、修复优先级，检查 P0 阻塞行 | STOP：列出未修复 P0 项 |
+| Verification Report exists with status ✅ or ⚠ | Read the status line in `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` | STOP |
+| Smoke Test Log all ✅ (no ❌, no ⏸️) | Read `## Smoke Test Log` section in `.agents/plans/{phase}.summary.md` | STOP: list ❌/⏸️ items, require fixes before re-submitting |
+| No ⏸️ unclosed Gate items | Scan Mandatory Gates table in Verification Report | STOP: list all ⏸️ items |
+| All P0 bugs fixed | Read Verification Report Section VII (Fix Priorities), check P0 Blocking rows | STOP: list unfixed P0 items |
 
-若所有条件满足，输出：`✅ 前置条件通过，开始关闭 Phase。`  
-若任一不满足，输出：`❌ Phase 不满足关闭条件：{未满足项列表}` 并终止，不执行后续步骤。
+If all conditions pass, output: `✅ Pre-conditions met, proceeding to close Phase.`  
+If any condition fails, output: `❌ Phase does not meet close conditions: {list of unmet items}` and terminate — do not execute subsequent steps.
 
 ---
 
@@ -57,7 +57,7 @@ Locations to check:
 For each file found, determine:
 - **Phase association**: Which phase does it belong to? (from filename or content)
 - **Completion status**: Is the phase fully done? (look for ✅/completed markers)
-- **Already archived?**: Is there a matching entry in CLAUDE.md's "迭代日志" section?
+- **Already archived?**: Is there a matching entry in CLAUDE.md's "Migration Journal" section?
 
 **Output a checklist** of what was found:
 ```
@@ -97,20 +97,20 @@ Format the extracted information as a concise journal entry:
 ```markdown
 ### Phase N: {phase-name} ✅ ({date range})
 
-**范围**: {1-sentence scope description}
-**产出**: {X source files, Y test files, Z migration scripts — key numbers only}
+**Scope**: {1-sentence scope description}
+**Output**: {X source files, Y test files, Z migration scripts — key numbers only}
 
-**计划偏差**:
+**Plan Deviations**:
 - {deviation 1: what changed and why}
 - {deviation 2}
 
-**发现 & 已修复的 Bug**:
+**Bugs Found & Fixed**:
 - {BUG-ID}: {1-line description} → {1-line fix}
 
-**未解决问题**:
+**Unresolved Issues**:
 - {issue description, if any}
 
-**教训**:
+**Lessons**:
 - {lesson that affects future phases}
 ```
 
@@ -128,15 +128,15 @@ Format the extracted information as a concise journal entry:
 
 ### Step 5: Update CLAUDE.md
 
-Check if CLAUDE.md has a "迭代日志" section:
+Check if CLAUDE.md has a "Migration Journal" section:
 - If **yes**: Append the new Phase entry at the end of that section
 - If **no**: Create the section before the last `---` separator (or at the end)
 
 The section header format:
 ```markdown
-## 迭代日志（Migration Journal）
+## Migration Journal
 
-> 每个 Phase 完成后由 `/close-phase` 自动提炼。详细报告见 `archive/`。
+> Automatically distilled by `/close-phase` after each Phase. Detailed reports in `archive/`.
 
 ### Phase 1: ...
 ### Phase 2: ...
@@ -168,7 +168,7 @@ $MOVE .agents/plans/phase{n}-*.md .agents/plans/archive/
 **Do NOT archive:**
 - `CLAUDE.md` (active context — the single source of truth)
 - `PRD.md` (requirement reference)
-- Any file referenced in CLAUDE.md's "参考文档" table as an active dependency
+- Any file referenced in CLAUDE.md's "Reference Documents" table as an active dependency
 - Any file for an incomplete/in-progress phase
 
 ### Step 7: Check & Update Reference Files
@@ -201,17 +201,17 @@ If no changes are detected, output:
 
 ---
 
-### Step 7.5: 更新 TEST_DASHBOARD.md
+### Step 7.5: Update TEST_DASHBOARD.md
 
-在完成归档后，更新 `.agents/reports/TEST_DASHBOARD.md`（不存在则创建）：
+After archiving, update `.agents/reports/TEST_DASHBOARD.md` (create if not exists):
 
-1. 在"Phase 覆盖矩阵"和"跨 Phase 趋势"表中追加/更新本 Phase 的一行
-2. 在本 Phase 的详细区块中填入：
-   - Gate 汇总（从 Verification Report Mandatory Gates 表读取）
-   - 单元测试明细（从 summary.md Test Cases 读取）
-   - Smoke Test 明细（从 summary.md Smoke Test Log 读取，含每条操作→预期→结果）
-   - 业务流程测试明细（从 summary.md Business Workflow Tests 读取，含 Mock 方案）
-3. TEST_DASHBOARD.md **不加入 CLAUDE.md context loading**，仅供人工查阅
+1. Append/update the current Phase's row in the "Phase Coverage Matrix" and "Cross-Phase Trends" tables
+2. Fill in this Phase's detailed block:
+   - Gate summary (read from Verification Report Mandatory Gates table)
+   - Unit test details (read from summary.md Test Cases)
+   - Smoke Test details (read from summary.md Smoke Test Log, including each action → expected → result)
+   - Business workflow test details (read from summary.md Business Workflow Tests, including Mock strategy)
+3. TEST_DASHBOARD.md is **NOT added to CLAUDE.md context loading** — for human reference only
 
 ---
 

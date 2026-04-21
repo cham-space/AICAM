@@ -55,6 +55,9 @@ Read the plan file and extract:
 4. **Testing strategy** — Test files and coverage targets
 5. **Plan deviations already noted** — Any "Plan Deviations" section in the plan/summary
 6. **Mandatory gates** — Unit tests, business workflow tests, and API naming consistency check (if applicable)
+7. **Project Type** — Read the plan file's `## Project Type` section to get the detected project type.  
+   If present, read the corresponding `.claude/reference/test-strategies/{type}.md` and use its "Business Workflow Verification" approach as the standard for the Business Workflow Tests Gate;  
+   if the section is missing, fall back to default strategy (API workflow test / IPC direct call).
 
 ---
 
@@ -120,10 +123,10 @@ Additionally enforce gate outcomes:
 - Business workflow tests must be evidenced by command output/artifacts
 - If API is involved, naming mapping consistency must be evidenced
 
-**⏸️ 状态硬规则**：
-- `⏸️ 需手动验证` 在任何 Gate 中均视为 ❌，不允许以此通过
-- Business Workflow Tests 状态为 ⏸️ → 必须提供可执行的自动化脚本（使用 mock/fixture），或用户明确书面确认"此 Phase 业务流程验证延期至下一 Phase"并在报告中标注风险
-- Smoke Test Log 缺失或存在 ⏸️ 条目 → Smoke Test Gate 状态为 ❌，阻断 Phase 关闭
+**⏸️ Hard Rule**:
+- `⏸️ pending manual verification` in any Gate is treated as ❌ — not allowed to pass
+- Business Workflow Tests status is ⏸️ → must provide an executable automated script (using mock/fixture), or user must explicitly confirm in writing: "Business workflow verification for this Phase is deferred to the next Phase" — note this as a risk in the report
+- Smoke Test Log missing or contains ⏸️ entries → Smoke Test Gate status is ❌, blocking Phase close
 
 ---
 
@@ -135,10 +138,10 @@ For each bug:
 ```
 ### BUG-{N}: {short title} — {severity: Critical/High/Medium/Low}
 
-**现象**: {what was observed}
-**根因**: {why it happened}
-**修复**: {what was changed, or "未修复"}
-**状态**: ✅ 已修复 | ❌ 未修复 | ⏭ 已知/延期
+**Symptom**: {what was observed}
+**Root cause**: {why it happened}
+**Fix**: {what was changed, or "not fixed"}
+**Status**: ✅ Fixed | ❌ Unfixed | ⏭ Known/Deferred
 ```
 
 **Bug Fix Path**:  
@@ -155,37 +158,37 @@ Do not close the Phase after directly patching code without a confirmed root cau
 Write the report to `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md`:
 
 ```markdown
-# Phase {N} 核验报告
+# Phase {N} Verification Report
 
-> 核验时间: {YYYY-MM-DD}
-> 核验范围: {phase scope from plan, N tasks}
-> 核验状态: ✅ 通过 | ⚠ 有条件通过 | ❌ 未通过
+> Verified: {YYYY-MM-DD}
+> Scope: {phase scope from plan, N tasks}
+> Status: ✅ PASS | ⚠ CONDITIONAL | ❌ FAIL
 
 ---
 
-## 一、环境与依赖核验
+## I. Environment & Dependency Check
 
-| 检查项 | 状态 | 说明 |
+| Check | Status | Notes |
 |--------|------|------|
 | {dependency} | ✅/❌ | {detail} |
 
 ---
 
-## 二、Task 任务完成情况
+## II. Task Completion
 
-### 总览：{N} 个文件（{M} 计划 + {extra} 额外）
+### Overview: {N} files ({M} planned + {extra} extra)
 
-| 任务组 | 任务 | 文件数 | 状态 | 备注 |
+| Task Group | Task | Files | Status | Notes |
 |--------|------|--------|------|------|
 
-### 变更/差异记录
+### Changes / Deviations
 
-| 计划 | 实际 | 类型 |
+| Planned | Actual | Type |
 |------|------|------|
 
 ---
 
-## 三、VALIDATION COMMANDS 执行结果
+## III. Validation Command Results
 
 ### Level 1: {command name}
 
@@ -200,48 +203,48 @@ Result: ✅/❌ | {summary}
 | Gate | Status | Evidence |
 |------|--------|----------|
 | Unit Tests | ✅/❌ | {command + short output} |
-| Business Workflow Tests | ✅/❌ | {command/artifact path — ⏸️ 不可通过} |
-| Smoke Test | ✅/❌ | 读取 summary.md `## Smoke Test Log`；任何 ❌ 条目或 ⏸️ 状态均视为整体 ❌ |
-| Runtime Verified | ✅/❌ | 应用/服务实际启动过的证明（Smoke Test Log 中启动条目为 ✅） |
+| Business Workflow Tests | ✅/❌ | {command/artifact path — ⏸️ not acceptable} |
+| Smoke Test | ✅/❌ | Read `## Smoke Test Log` from summary.md; any ❌ entry or ⏸️ status counts as overall ❌ |
+| Runtime Verified | ✅/❌ | Evidence that app/service was actually started (startup entry in Smoke Test Log is ✅) |
 | API Naming Consistency (if applicable) | ✅/❌/N/A | {mapping/check evidence} |
 | TDD Compliance | ✅/❌/N/A | {Read `## TDD Log` from summary.md — verify non-exempt task count matches TDD records; flag any missing entries or EXEMPT-without-user-confirmation entries} |
 
 ---
 
-## 四、发现的缺陷
+## IV. Bugs Found
 
 {Bug catalogue from Step 6}
 
 ---
 
-## 五、ACCEPTANCE CRITERIA 核验
+## V. Acceptance Criteria Audit
 
-| 验收标准 | 状态 | 说明 |
+| Acceptance Criterion | Status | Notes |
 |----------|------|------|
 
 ---
 
-## 六、AC-Test 覆盖矩阵
+## VI. AC-Test Coverage Matrix
 
-> 扫描来源：Spec-Lite AC 列表 × 计划文件中声明的测试文件（不做全库扫描）。
+> Source: Spec-Lite AC list × test files declared in the plan (no full-repo scan).
 
-| AC ID | 验收标准 | 覆盖测试用例 | 测试文件 | 测试结果 | 状态 |
+| AC ID | Criterion | Covered By | Test File | Test Result | Status |
 |-------|----------|------------|---------|---------|------|
-| AC-1 | {标准描述} | {describe > it name} | {path/to/test.ts} | PASS/FAIL | ✅/❌ |
-| AC-2 | {标准描述} | — | — | — | ⚠ 无覆盖 |
+| AC-1 | {description} | {describe > it name} | {path/to/test.ts} | PASS/FAIL | ✅/❌ |
+| AC-2 | {description} | — | — | — | ⚠ No coverage |
 
-> ⚠ 无覆盖 的 AC 项视为 PARTIAL，需在修复优先级中列出。
+> ACs with ⚠ No coverage are treated as PARTIAL and must be listed in fix priorities.
 
 ---
 
-## 七、修复优先级建议
+## VII. Fix Priority Recommendations
 
-| 优先级 | 编号 | 问题 | 修复工作量 |
+| Priority | ID | Issue | Fix Effort |
 |--------|------|------|------------|
-| P0 阻塞 | | | |
-| P1 高 | | | |
-| P2 中 | | | |
-| P3 低 | | | |
+| P0 Blocking | | | |
+| P1 High | | | |
+| P2 Medium | | | |
+| P3 Low | | | |
 ```
 
 ---

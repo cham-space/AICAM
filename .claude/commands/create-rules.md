@@ -203,28 +203,28 @@ Use the template at `.claude/CLAUDE-template.md` as a starting point.
 ## Step 4: OUTPUT
 
 ```markdown
-## 全局规则已创建
+## Global Rules Created
 
-**文件**: `CLAUDE.md`
+**File**: `CLAUDE.md`
 
-### 项目类型
+### Project Type
 
-{检测到的项目类型}
+{detected project type}
 
-### 技术栈摘要
+### Tech Stack Summary
 
-{检测到的关键技术}
+{key technologies detected}
 
-### 目录结构
+### Directory Structure
 
-{简要概述}
+{brief overview}
 
-### 下一步
+### Next Steps
 
-1. 审阅生成的 `CLAUDE.md`
-2. 添加项目专属说明
-3. 删除不适用的章节
-4. 按 Volume gate 拆分规则，创建 `.claude/reference/` 中必要的参考文档
+1. Review the generated `CLAUDE.md`
+2. Add project-specific notes
+3. Remove inapplicable sections
+4. Apply Volume gate split rules to create necessary reference docs in `.claude/reference/`
 ```
 
 ---

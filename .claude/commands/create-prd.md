@@ -142,13 +142,13 @@ Create a well-structured PRD with the following sections. Adapt depth and detail
 - **Specificity:** Prefer concrete examples over abstract descriptions
 - **Length:** Focused and scannable. Architecture details link to the design document — do not duplicate. Target: 15-25 sections.
 
-## 输出确认
+## Output Confirmation
 
-PRD 创建完成后：
-1. 确认文件路径
-2. 简要总结 PRD 内容
-3. 指出因信息缺失而做出的假设
-4. 明确提示下一步：运行 `/ref-research` 启动 Phase 0-C（前端组件与 API 最佳实践调研），然后运行 `/create-rules` 生成 CLAUDE.md
+After the PRD is created:
+1. Confirm the file path
+2. Briefly summarize the PRD content
+3. Note any assumptions made due to missing information
+4. Prompt the next step: run `/ref-research` to start Phase 0-C (frontend component and API best practices research), then run `/create-rules` to generate CLAUDE.md
 
 ## Notes
 

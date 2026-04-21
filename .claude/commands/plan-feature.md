@@ -1,6 +1,6 @@
 ---
 description: "Create comprehensive feature plan with deep codebase analysis and research"
-argument-hint: "[功能描述]"
+argument-hint: "[feature description]"
 ---
 
 # Plan a new task
@@ -25,7 +25,7 @@ Before planning, verify workspace context is clean and budget-efficient:
 
 **1. Stale Phase Artifacts**
 
-Scan `.agents/plans/` for completed plans and project root for `*REPORT*.md` / `*VERIFICATION*.md` files that have no corresponding entry in CLAUDE.md's "迭代日志" section.
+Scan `.agents/plans/` for completed plans and project root for `*REPORT*.md` / `*VERIFICATION*.md` files that have no corresponding entry in CLAUDE.md's "Migration Journal" section.
 
 - If found → **WARN**: `"⚠ Detected N unarchived Phase artifact(s). Run /close-phase before planning to keep context clean and free up budget."`
 - List the files and their sizes
@@ -87,6 +87,21 @@ clear goal, constraints, and expected output format.
 - Identify service/component boundaries and integration points
 - Locate configuration files (pyproject.toml, package.json, etc.)
 - Find environment setup and build processes
+
+**Project Type Detection (required)**
+
+Scan the following feature files to determine the project type, and write the result to the plan file's `## Project Type` section:
+
+| Project Type | Detection Signal | Strategy File |
+|---------|---------|---------|
+| `tauri` | `src-tauri/Cargo.toml` exists | `.claude/reference/test-strategies/tauri.md` |
+| `web` | `package.json` without `src-tauri/`, with frontend framework deps | `.claude/reference/test-strategies/web.md` |
+| `rest-api` | No frontend directory, with HTTP framework deps | `.claude/reference/test-strategies/rest-api.md` |
+| `cli` | `Cargo.toml`/`package.json` contains `clap`/`commander`/`click` | `.claude/reference/test-strategies/cli.md` |
+| `worker` | No HTTP listener, with message queue/cron job deps | `.claude/reference/test-strategies/worker.md` |
+| `mobile` | `android/`/`ios/` directories, or `pubspec.yaml` | `.claude/reference/test-strategies/mobile.md` |
+
+After detection, **immediately read the corresponding strategy file** and use its Smoke Test Checklist and business workflow validation as the default test strategy in the plan.
 
 **2. Pattern Recognition** (Use specialized subagents when beneficial)
 

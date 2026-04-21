@@ -33,7 +33,27 @@ If no frontend is detected:
 
 Stop execution if no frontend is found.
 
-### 3. agent-browser Installation
+### 3. 项目类型检测（决定测试工具）
+
+检查 `.claude/reference/test-strategies/` 是否存在，并读取计划文件（如有）的 `## Project Type` 节：
+
+| 检测到的类型 | 测试工具 | 说明 |
+|-------------|---------|------|
+| `web` | **Playwright**（`npx playwright test`）| 自动化 E2E，跳过 agent-browser |
+| `tauri` | **Tauri IPC 直调**（`invoke`）+ 前端 dev console | 不依赖浏览器自动化 |
+| `rest-api` | **API workflow test**（supertest / httpx）| 多步 HTTP 序列 |
+| `cli` | **CLI 集成测试**（子进程断言）| exit code + stdout |
+| `worker` | **消息队列 stub + 时序断言** | 注入消息观察处理结果 |
+| `mobile` | **Detox / Maestro** | 模拟器交互 |
+| 未检测到 | **agent-browser**（默认）| 回退到原浏览器自动化 |
+
+若检测到 `web` 类型，跳转到 **Playwright E2E 流程**（见下方 Phase 1b）；
+其他类型按对应策略执行（读取 `.claude/reference/test-strategies/{type}.md`）；
+未检测到则继续执行原有 agent-browser 流程。
+
+### 4. agent-browser Installation（仅默认回退路径）
+
+> 仅当项目类型**未检测**或为 `web` 但 Playwright 不可用时才执行此步骤。
 
 Check if agent-browser is installed:
 ```bash
@@ -60,7 +80,57 @@ agent-browser --version
 If installation fails, stop with:
 > "Failed to install agent-browser. Please install it manually with `npm install -g agent-browser && agent-browser install --with-deps`, then re-run this command."
 
-## Phase 1: Parallel Research
+## Phase 1a: Playwright E2E 流程（仅 web 类型）
+
+> 当项目类型检测为 `web` 时，执行本阶段，跳过后续 Phase 1-4 的 agent-browser 流程。
+
+### 1. 安装与配置
+
+```bash
+# 检查是否已安装
+npx playwright --version || npm install -D @playwright/test && npx playwright install chromium
+```
+
+生成或复用 `playwright.config.ts`（参考 `.claude/reference/test-strategies/web.md` 中的模板）。
+
+### 2. 按 AC 生成测试
+
+读取 Spec-Lite 的 AC 列表，为每条业务流程创建对应测试文件（`e2e/{feature}.spec.ts`），模板：
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('核心用户旅程', async ({ page }) => {
+  await page.goto('/');
+  // 按 Spec-Lite AC 描述的操作路径编写交互
+  await expect(page.getByTestId('{element}')).toBeVisible();
+});
+```
+
+### 3. 执行与报告
+
+```bash
+npx playwright test
+npx playwright show-report  # 查看 HTML 报告
+```
+
+测试结果写入 summary.md 的 `## Playwright Test Log` 节。
+
+---
+
+## Phase 1b: 非 Web 类型流程
+
+> 当项目类型为 `tauri` / `rest-api` / `cli` / `worker` / `mobile` 时：
+> 直接读取 `.claude/reference/test-strategies/{type}.md`，按其中的"业务流程验证方式"执行。
+> 跳过后续 Phase 1-4 的 agent-browser 流程。
+
+---
+
+## Phase 1: Parallel Research（默认回退路径）
+
+> 仅当项目类型**未检测到**时才执行本阶段。
+
+Launch **three sub-agents simultaneously** using the Task tool. All three run in parallel.
 
 Launch **three sub-agents simultaneously** using the Task tool. All three run in parallel.
 
@@ -98,7 +168,7 @@ Launch **three sub-agents simultaneously** using the Task tool. All three run in
 
 **Wait for all three sub-agents to complete before proceeding.**
 
-## Phase 2: Start the Application
+## Phase 2: Start the Application（默认回退路径）
 
 Using Sub-agent 1's startup instructions:
 

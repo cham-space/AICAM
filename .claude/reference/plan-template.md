@@ -158,24 +158,43 @@ Use information-dense keywords for clarity:
 
 ---
 
+## Project Type
+
+<!-- Auto-filled by /plan-feature Stage 2. When filling manually, select one. -->
+
+**Detected project type**: `{tauri | web | rest-api | cli | worker | mobile}`
+
+**Strategy reference**: `.claude/reference/test-strategies/{type}.md`
+
+| Type | Business Workflow Verification Tool | Smoke Test Startup Command Example |
+|------|-------------------------------------|-----------------------------------|
+| `tauri` | Tauri IPC direct call (`invoke`) | `cargo tauri dev` |
+| `web` | **Playwright** (`npx playwright test`) | `npm run dev` |
+| `rest-api` | API workflow test (multi-step curl / supertest) | `npm start` / `uvicorn main:app` |
+| `cli` | CLI integration test (exit code + stdout) | `cargo build --release` |
+| `worker` | Message queue stub + timing assertions | `node worker.js` / `python worker.py` |
+| `mobile` | Detox / Maestro flow | `npx react-native run-ios` |
+
+---
+
 ## Smoke Test Checklist
 
-<!-- 必填。每条为"操作 → 预期结果"格式，应用/服务启动后逐条验证。缺少此节将导致 /execute 停止执行。 -->
+<!-- Required. Each entry: "action → expected result". Verify each after app/service starts. Missing this section causes /execute to stop. -->
 
 **启动命令**: `{command to start app/service}`
 
-- [ ] 应用/服务正常启动，无崩溃
-- [ ] {核心功能 A}：{操作步骤} → {预期结果}
-- [ ] {核心功能 B}：{操作步骤} → {预期结果}
-- [ ] 重启/二次启动不崩溃，数据保留
+- [ ] App/service starts normally, no crashes
+- [ ] {Core feature A}: {steps} → {expected result}
+- [ ] {Core feature B}: {steps} → {expected result}
+- [ ] Restart/second launch works, data retained
 
 ## Mock Strategy
 
-<!-- 必填。说明业务流程测试如何不依赖真实外部服务。 -->
+<!-- Required. Explain how business workflow tests avoid relying on real external services. -->
 
-| 外部依赖 | Mock 方案 | 工具/库 |
+| External Dependency | Mock Strategy | Tool/Library |
 |---------|---------|---------|
-| {外部 API / DB / 第三方服务} | {预设响应 fixture / 内存 DB / stub} | {工具名} |
+| {External API / DB / Third-party service} | {Pre-set response fixture / in-memory DB / stub} | {tool name} |
 
 ---
 
@@ -195,10 +214,16 @@ Design unit tests with fixtures and assertions following existing testing approa
 
 ### Business Workflow Tests (MANDATORY)
 
-Define at least one end-to-end business workflow validation path:
+Define at least one end-to-end business workflow validation path based on project type:
 
-- Frontend available: use `e2e-test` / browser-based journey tests
-- Backend-only: use API workflow tests (multi-step request sequence with data-state checks)
+| Project Type | Business Workflow Verification Tool | Evidence Required |
+|---------|----------------|----------|
+| Web Frontend / SPA | **Playwright** (`npx playwright test`) | Screenshot + DOM assertion |
+| Tauri Desktop App | Tauri IPC direct call (`invoke`) + cpal mock | Return value + state snapshot |
+| REST API / Backend | API workflow test (multi-step request + DB checks) | Response assertion + DB row verification |
+| CLI Tool | CLI integration test (exit code + stdout/stderr) | Output assertion |
+| Worker / Background Service | Message queue stub + timing assertions | Log + eventual state consistency |
+| Mobile | Detox / Maestro flow | Screenshot + element assertion |
 
 Include pass/fail evidence requirements (screenshots, response assertions, DB checks, or logs).
 

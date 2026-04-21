@@ -50,42 +50,42 @@ Check recent activity:
 Check current branch and status:
 !`git status`
 
-## 输出报告
+## Output Report
 
-提供简洁摘要：
+Provide a concise summary:
 
-### 项目概述
-- 用途和应用类型
-- 主要技术和框架
-- 当前版本/状态
+### Project Overview
+- Purpose and application type
+- Primary technologies and frameworks
+- Current version/status
 
-### 架构
-- 整体结构和组织
-- 关键架构模式
-- 重要目录及其职责
+### Architecture
+- Overall structure and organization
+- Key architectural patterns
+- Important directories and their responsibilities
 
-### 技术栈
-- 语言和版本
-- 框架和主要库
-- 构建工具和包管理器
-- 测试框架
+### Tech Stack
+- Languages and versions
+- Frameworks and major libraries
+- Build tools and package managers
+- Testing frameworks
 
-### 核心原则
-- 代码风格和约定
-- 文档标准
-- 测试方法
+### Core Principles
+- Code style and conventions
+- Documentation standards
+- Testing approach
 
-### 可用自动化 Skill
-- `api-contract-first`：API 合约一致性核验（涉及 API 时自动触发）
-- `e2e-test`：业务功能端到端测试（有前端时自动执行）
-- `ui-ux-pro-max`：UI/UX 设计智能（涉及前端 UI 时自动加载）
-- `test-driven-development`：TDD 强制门禁（Phase 2 每个 Task 自动加载）
-- `systematic-debugging`：系统化调试（bug/测试失败时加载）
-- `requesting-code-review`：独立 Code Review（Phase 3 建议执行）
+### Available Automation Skills
+- `api-contract-first`: API contract consistency validation (auto-triggers when API is involved)
+- `e2e-test`: End-to-end business feature testing (auto-executes when frontend is present)
+- `ui-ux-pro-max`: UI/UX design intelligence (auto-loads when frontend UI is involved)
+- `test-driven-development`: TDD enforcement gate (auto-loads for every Task in Phase 2)
+- `systematic-debugging`: Systematic debugging (loads on bug/test failure)
+- `requesting-code-review`: Independent Code Review (recommended in Phase 3)
 
-### 当前状态
-- 活跃分支
-- 近期变更或开发重点
-- 任何值得注意的观察或问题
+### Current State
+- Active branch
+- Recent changes or development focus
+- Any notable observations or issues
 
-**使用要点和清晰标题，便于快速浏览。**
+**Use bullet points and clear headings for quick scanning.**
