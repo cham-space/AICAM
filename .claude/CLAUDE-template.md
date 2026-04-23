@@ -82,6 +82,19 @@ For detailed component specs, see `docs/specs/*-design.md`.
 ### Streaming / Real-Time
 - {approach summary}
 
+### Simplicity First（适用于实施阶段 Phase 2）
+- Write minimum code to meet the current Spec-Lite AC — no speculative features
+- No abstractions unless reused in ≥2 places within this Phase
+- No error handling for scenarios the Spec-Lite doesn't define
+- If the task can be done in 50 lines, don't write 200
+
+### Surgical Changes
+- Touch only what the request requires — do not "improve" adjacent code, comments, or formatting
+- Match existing style even if you would do it differently; do not refactor things that aren't broken
+- If you notice unrelated dead code, mention it — never delete it silently
+- Remove imports/variables/functions that YOUR changes made unused; leave pre-existing dead code alone
+- Every changed line must trace directly to the user's request
+
 > For detailed patterns, read `.claude/reference/components.md` (frontend) or `.claude/reference/api.md` (backend/API).
 
 ---
@@ -90,10 +103,12 @@ For detailed component specs, see `docs/specs/*-design.md`.
 
 <!-- 3-4 lines max. Do not include test pyramids, mock examples, or detailed strategies. -->
 
-- **Run tests**: `{test-command}`
+- **Unit tests**: `{unit-test-command}`
+- **Business workflow tests**: `{e2e-or-integration-command}`
+- **Single file / targeted**: `{targeted-test-command}`
 - **Pattern**: {1-sentence approach}
 
-> For detailed testing strategy, read `.claude/reference/components.md` Section 6.
+> For detailed testing strategy, read `.claude/reference/test-strategies/{type}.md`.
 
 ---
 
@@ -117,6 +132,11 @@ For detailed component specs, see `docs/specs/*-design.md`.
 | API Endpoint Guidelines | `.claude/reference/api.md` | When defining or calling Tauri IPC commands / external APIs |
 
 **Hard isolation rule**: Do NOT read these reference files unless the current task explicitly requires them. They exist for on-demand lookup only.
+
+**Skill 激活规则**（强制执行，不依赖自动匹配）：
+- 构建或修改前端组件/页面 → 明确加载 `frontend-design` 或 `ui-ux-pro-max`
+- 涉及 API 定义或前后端字段联调 → 明确加载 `api-contract-first`
+- 执行业务功能测试（E2E）→ 明确加载 `e2e-test`
 
 ---
 

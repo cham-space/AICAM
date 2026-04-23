@@ -108,6 +108,15 @@ npx playwright show-report   # View HTML report
 
 ---
 
+## Environment Variable Isolation
+
+- Use `vi.stubEnv('NAME', 'value')` instead of directly modifying `process.env`
+- Stub in `beforeEach`, call `vi.unstubAllEnvs()` in `afterEach`
+- To simulate an unset variable, use an empty string: `vi.stubEnv('NAME', '')`
+- Violating this rule causes state leakage between tests
+
+---
+
 ## Evidence Requirements
 
 - Smoke Test: `npm run dev` terminal + browser home page screenshot (no console Errors)

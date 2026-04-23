@@ -132,8 +132,6 @@ npx playwright show-report  # 查看 HTML 报告
 
 Launch **three sub-agents simultaneously** using the Task tool. All three run in parallel.
 
-Launch **three sub-agents simultaneously** using the Task tool. All three run in parallel.
-
 ### Sub-agent 1: Application Structure & User Journeys
 
 > Research this codebase thoroughly. Return a structured summary covering:
