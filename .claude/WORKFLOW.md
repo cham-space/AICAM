@@ -35,7 +35,7 @@
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
 | **组件（Commands）** | `.claude/commands/` | 12 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit` |
-| **技能（Skills）** | `.claude/skills/` | 5 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design`、`ui-ux-pro-max` |
+| **技能（Skills）** | `.claude/skills/` | 4 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
 | **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件 |
 | **计划与规格** | `.agents/` | 2 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格 |
@@ -444,7 +444,7 @@ graph TD
 ```
 .claude/                        # AICAM 工作流系统目录（不含项目业务代码）
 ├── commands/                   # 12 个 slash 命令脚本（/discover、/execute 等）
-├── skills/                     # 领域专项 Skill（api-contract-first、ui-ux-pro-max 等）
+├── skills/                     # 领域专项 Skill（api-contract-first、frontend-design 等）
 ├── reference/                  # 按需加载的参考文档（components.md、api.md 等）
 │   ├── index.md                # 参考文档索引，说明各文档的加载时机
 │   ├── plan-template.md        # 功能实施计划模板（含 Smoke Test Checklist + Mock Strategy）
@@ -548,8 +548,7 @@ CLAUDE.md 迭代日志
 | `api-contract-first` | 操作 API 控制器/业务服务/数据传输层目录；或用户提到 "API contract"、"OpenAPI"、"swagger"、"frontend-backend"、"field mapping"；**涉及 API 即强制执行命名映射核验** |
 | `e2e-test` | 有前端且进入业务功能测试阶段时自动建议并默认执行 |
 | `agent-browser` | `e2e-test` Skill 内部调用 |
-| `frontend-design` | 涉及前端 UI 组件/页面/样式实现时自动加载；用户提到 "组件"、"页面"、"样式"、"布局"、"响应式"、"动画" |
-| `ui-ux-pro-max` | 涉及前端 UI 设计/组件/配色/布局/动效时自动加载；用户提到 "UI"、"UX"、"设计"、"样式"、"组件"、"配色"、"dark mode"、"响应式" |
+| `frontend-design` | 涉及前端 UI 组件/页面/样式/配色/布局/动效时自动加载；用户提到 "UI"、"UX"、"组件"、"页面"、"样式"、"配色"、"布局"、"dark mode"、"响应式" |
 | `skill-creator` | 需要创建、修改、优化或评估任何 Skill 本身时加载；用于保持工作流 skill 的质量与触发准确性。加载路径：VS Code 扩展内置，非工作区 `.claude/skills/` |
 | `test-driven-development`（superpowers 内置） | **Phase 2 实施每个 Task 前自动加载**；实现新功能、修复 bug、重构行为变更时，要求先写失败测试再写实现代码 |
 | `systematic-debugging`（superpowers 内置） | 遇到 bug、测试失败、非预期行为时立即加载；**禁止在定位根因前提出修复方案** |

@@ -34,7 +34,7 @@
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
 | **Commands** | `.claude/commands/` | 12 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit` |
-| **Skills** | `.claude/skills/` | 5 | `agent-browser`, `api-contract-first`, `e2e-test`, `frontend-design`, `ui-ux-pro-max` |
+| **Skills** | `.claude/skills/` | 4 | `agent-browser`, `api-contract-first`, `e2e-test`, `frontend-design` |
 | **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
 | **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization |
 | **Plans & Specs** | `.agents/` | 2 subdirectories | `plans/` stores implementation plans, `specs/` stores lightweight specs |
@@ -443,7 +443,7 @@ graph TD
 ```
 .claude/                        # AICAM workflow system directory (excludes project business code)
 ├── commands/                   # 12 slash command scripts (/discover, /execute, etc.)
-├── skills/                     # Domain-specific skills (api-contract-first, ui-ux-pro-max, etc.)
+├── skills/                     # Domain-specific skills (api-contract-first, frontend-design, etc.)
 ├── reference/                  # On-demand reference documents (components.md, api.md, etc.)
 │   ├── index.md                # Reference document index, describing when each doc is loaded
 │   ├── plan-template.md        # Feature implementation plan template (includes Smoke Test Checklist + Mock Strategy)
@@ -546,8 +546,7 @@ CLAUDE.md iteration log
 | `api-contract-first` | Operating on API controller / business service / data transfer layer directories; or user mentions "API contract", "OpenAPI", "swagger", "frontend-backend", "field mapping"; **API involvement mandates naming mapping verification** |
 | `e2e-test` | Auto-suggested and default execution when a frontend exists and entering the business function testing stage |
 | `agent-browser` | Called internally by `e2e-test` Skill |
-| `frontend-design` | Auto-loaded when frontend UI components/pages/styles implementation is involved; user mentions "component", "page", "style", "layout", "responsive", "animation" |
-| `ui-ux-pro-max` | Auto-loaded when frontend UI design / components / color schemes / layouts / animations are involved; user mentions "UI", "UX", "design", "styles", "components", "color scheme", "dark mode", "responsive" |
+| `frontend-design` | Auto-loaded when frontend UI components/pages/styles/color-schemes/layouts/animations are involved; user mentions "UI", "UX", "component", "page", "style", "color scheme", "layout", "dark mode", "responsive" |
 | `skill-creator` | Loaded when creating, modifying, optimizing, or evaluating any Skill itself; used to maintain workflow skill quality and trigger accuracy. Load path: VS Code extension built-in, not workspace `.claude/skills/` |
 | `test-driven-development` (superpowers built-in) | **Auto-loaded before every Task in Phase 2**; when implementing new features, fixing bugs, refactoring with behavior changes, requires writing failing tests before implementation code |
 | `systematic-debugging` (superpowers built-in) | Loaded immediately when encountering bugs, test failures, or unexpected behavior; **no fix proposals before root cause identification** |

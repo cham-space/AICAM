@@ -78,7 +78,7 @@ Provide a concise summary:
 ### Available Automation Skills
 - `api-contract-first`: API contract consistency validation (auto-triggers when API is involved)
 - `e2e-test`: End-to-end business feature testing (auto-executes when frontend is present)
-- `ui-ux-pro-max`: UI/UX design intelligence (auto-loads when frontend UI is involved)
+- `frontend-design`: Frontend UI design intelligence (auto-loads when frontend UI is involved)
 - `test-driven-development`: TDD enforcement gate (auto-loads for every Task in Phase 2)
 - `systematic-debugging`: Systematic debugging (loads on bug/test failure)
 - `requesting-code-review`: Independent Code Review (recommended in Phase 3)
