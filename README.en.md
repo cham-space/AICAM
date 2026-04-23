@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.1.0 | 2026-04-21
+> Version: v1.2.0 | 2026-04-23
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -9,7 +9,9 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| v1.0.0 | 2026-04-19 | Initial release: 5-Phase workflow + 12 commands + 5 skills + Mermaid visualization |
 | v1.1.0 | 2026-04-21 | Added Smoke Test gate, tightened TDD exemption scope, ⏸️ hard-fail rule, TEST_DASHBOARD tracking, skills list correction (frontend-design replaces skill-creator) |
+| v1.2.0 | 2026-04-23 | Added Simplicity First / Surgical Changes / explicit Skill activation rules; removed ui-ux-pro-max (missing core scripts); workspace skills trimmed to 4; reference index internationalized |
 
 ---
 
@@ -600,6 +602,9 @@ CLAUDE.md iteration log
     - `finishing-a-development-branch`: Handles PR/merge flows; project uses /commit.
     - `using-git-worktrees`: Project does not support worktree mode.
     - `using-superpowers`: Meta-skill forces loading brainstorming, which conflicts with /discover Path A.
+15. **Simplicity First**: During Phase 2 implementation, write the minimum code necessary to satisfy the current Spec-Lite AC; do not introduce speculative features; do not create abstractions unless reused in ≥2 places within the same Phase; do not handle error scenarios not defined in the Spec-Lite; if 50 lines can solve the problem, don't write 200.
+16. **Surgical Changes**: Only modify exactly what the request requires — do not "improve" adjacent code, comments, or formatting; follow existing code style even if you would do it differently; flag unrelated dead code instead of silently deleting it; clean up unused imports/variables introduced by your changes, leave pre-existing dead code alone; every changed line must trace back to the user's request.
+17. **Explicit Skill Activation Rules**: Do not rely on auto-matching. Frontend components/pages → explicitly load `frontend-design`; API definition/field mapping → explicitly load `api-contract-first`; business workflow testing → explicitly load `e2e-test`. Workspace skills stay lean — remove skills missing core scripts (e.g., the deleted ui-ux-pro-max).
 
 ---
 
@@ -618,5 +623,7 @@ The design and implementation of the AICAM workflow system references the follow
 | [Domain-Driven Design](https://domainlanguage.com/ddd/) | Layered architecture, domain boundary division principles |
 | [Test-Driven Development by Example](https://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530) | TDD red-green-refactor cycle iron-clad practice |
 | [GitOps Principles](https://www.gitops.tech/) | Atomic commits, branch isolation, code review workflows |
+| [Unix Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy) | Simplicity First principle: do one thing and do it well; principle of least surprise |
+| [Principle of Least Astonishment](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) | Surgical Changes principle: changes should not exceed reader expectations |
 
 > AICAM is not a simple concatenation of the above approaches, but rather a fusion of their core ideas into a **unified 5-phase development lifecycle**, where every node is reusable across languages and platforms.
