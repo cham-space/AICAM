@@ -37,7 +37,7 @@
 | **组件（Commands）** | `.claude/commands/` | 12 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit` |
 | **技能（Skills）** | `.claude/skills/` | 4 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
-| **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件 |
+| **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 测试命令分类） |
 | **计划与规格** | `.agents/` | 2 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格 |
 
 ### 使用方式
@@ -45,6 +45,17 @@
 1. **新项目**：将 `.claude/` 目录整体复制到项目根目录，运行 `/discover` 开始
 2. **已有项目**：复制到已有项目后，跳过 Phase 0，直接从 `/plan-feature` 开始
 3. **迭代**：每个新功能独立走完 5 个 Phase 后归档，CLAUDE.md 保持精简可维护
+
+### CLAUDE-template.md 核心特性
+
+`CLAUDE-template.md` 是 `/init-project` 生成的项目 `CLAUDE.md` 种子文件，包含以下关键约束：
+
+| 特性 | 说明 |
+|------|------|
+| **Simplicity First** | 仅写最小必要代码满足当前 Spec-Lite AC；不引入推测性特性；除非本 Phase 内 ≥2 处复用才做抽象；不处理 Spec-Lite 未定义的错误场景 |
+| **Surgical Changes** | 仅修改请求要求的内容，不"改善"相邻代码/注释/格式；遵循现有代码风格；发现无关死代码只提示不静默删除；清理本次变更产生的未使用导入/变量 |
+| **Skill 激活规则** | 强制执行（不依赖自动匹配）：前端组件/页面 → `frontend-design`；API 定义/字段联调 → `api-contract-first`；业务功能测试 → `e2e-test` |
+| **测试命令分类** | 分为 Unit tests / Business workflow tests / Single file targeted 三类，策略文档引用 `.claude/reference/test-strategies/{type}.md` |
 
 ### 与其他方案的差异
 
@@ -454,9 +465,9 @@ graph TD
 │       ├── mobile.md           # 移动端测试策略
 │       ├── rest-api.md         # REST API 测试策略
 │       ├── tauri.md            # Tauri 桌面应用测试策略
-│       ├── web.md              # Web 应用测试策略
+│       ├── web.md              # Web 应用测试策略（含 Smoke Test、Vitest 环境隔离等）
 │       └── worker.md           # Worker/服务端测试策略
-├── CLAUDE-template.md          # 新项目初始化时的 CLAUDE.md 种子文件
+├── CLAUDE-template.md          # 新项目 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes / Skill 激活规则）
 └── WORKFLOW.md                 # 本文档：工作流全局说明
 
 .agents/                        # AI Agent 运行时产物目录（所有阶段产出集中于此）

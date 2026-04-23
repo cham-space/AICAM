@@ -134,7 +134,7 @@ For detailed component specs, see `docs/specs/*-design.md`.
 **Hard isolation rule**: Do NOT read these reference files unless the current task explicitly requires them. They exist for on-demand lookup only.
 
 **Skill 激活规则**（强制执行，不依赖自动匹配）：
-- 构建或修改前端组件/页面 → 明确加载 `frontend-design` 或 `ui-ux-pro-max`
+- 构建或修改前端组件/页面 → 明确加载 `frontend-design`
 - 涉及 API 定义或前后端字段联调 → 明确加载 `api-contract-first`
 - 执行业务功能测试（E2E）→ 明确加载 `e2e-test`
 
