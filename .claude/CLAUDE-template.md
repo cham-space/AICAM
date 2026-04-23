@@ -82,7 +82,7 @@ For detailed component specs, see `docs/specs/*-design.md`.
 ### Streaming / Real-Time
 - {approach summary}
 
-### Simplicity First（适用于实施阶段 Phase 2）
+### Simplicity First (applies to Phase 2 implementation)
 - Write minimum code to meet the current Spec-Lite AC — no speculative features
 - No abstractions unless reused in ≥2 places within this Phase
 - No error handling for scenarios the Spec-Lite doesn't define
@@ -133,10 +133,10 @@ For detailed component specs, see `docs/specs/*-design.md`.
 
 **Hard isolation rule**: Do NOT read these reference files unless the current task explicitly requires them. They exist for on-demand lookup only.
 
-**Skill 激活规则**（强制执行，不依赖自动匹配）：
-- 构建或修改前端组件/页面 → 明确加载 `frontend-design`
-- 涉及 API 定义或前后端字段联调 → 明确加载 `api-contract-first`
-- 执行业务功能测试（E2E）→ 明确加载 `e2e-test`
+**Skill Activation Rules** (enforced — do not rely on auto-match):
+- Building or modifying frontend components/pages → explicitly load `frontend-design`
+- API definition or frontend-backend field mapping → explicitly load `api-contract-first`
+- Business workflow testing (E2E) → explicitly load `e2e-test`
 
 ---
 
