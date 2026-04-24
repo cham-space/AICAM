@@ -35,7 +35,7 @@
 
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
-| **Commands** | `.claude/commands/` | 12 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit` |
+| **Commands** | `.claude/commands/` | 13 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix` |
 | **Skills** | `.claude/skills/` | 4 | `agent-browser`, `api-contract-first`, `e2e-test`, `frontend-design` |
 | **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
 | **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization (includes Simplicity First / Surgical Changes rules + Skill activation rules + test command categories) |
@@ -455,7 +455,7 @@ graph TD
 
 ```
 .claude/                        # AICAM workflow system directory (excludes project business code)
-├── commands/                   # 12 slash command scripts (/discover, /execute, etc.)
+├── commands/                   # 13 slash command scripts (/discover, /execute, /hotfix, etc.)
 ├── skills/                     # Domain-specific skills (api-contract-first, frontend-design, etc.)
 ├── reference/                  # On-demand reference documents (components.md, api.md, etc.)
 │   ├── index.md                # Reference document index, describing when each doc is loaded
@@ -499,6 +499,7 @@ archive/                        # Historical archive directory (collected after 
 |-----------|-----------|------------|---------|-------------------|
 | `.claude/commands/` | Permanent | Manual maintenance | All command triggers | ✅ On-demand instructions |
 | `.claude/reference/` | Permanent | `/ref-research` | Explicit references | ✅ On-demand (hard isolation) |
+| `.claude/reference/test-strategies/` | Permanent | `/execute`, `/verify-phase` | TDD phase by project type | ✅ On-demand |
 | `.agents/plans/` | Phase lifecycle | `/plan-feature`, `/execute` | `/execute`, `/verify-phase` | ✅ Active read during execution |
 | `.agents/specs/` | Phase lifecycle | `/plan-feature` | `/execute`, `/verify-phase` | ✅ Active read during execution |
 | `.agents/reviews/` | Phase lifecycle | `/code-review` | `/verify-phase` (existence check only) | ❌ Archive only, not loaded |

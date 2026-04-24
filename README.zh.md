@@ -35,7 +35,7 @@
 
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
-| **组件（Commands）** | `.claude/commands/` | 12 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit` |
+| **组件（Commands）** | `.claude/commands/` | 13 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix` |
 | **技能（Skills）** | `.claude/skills/` | 4 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
 | **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 测试命令分类） |
@@ -455,7 +455,7 @@ graph TD
 
 ```
 .claude/                        # AICAM 工作流系统目录（不含项目业务代码）
-├── commands/                   # 12 个 slash 命令脚本（/discover、/execute 等）
+├── commands/                   # 13 个 slash 命令脚本（/discover、/execute、/hotfix 等）
 ├── skills/                     # 领域专项 Skill（api-contract-first、frontend-design 等）
 ├── reference/                  # 按需加载的参考文档（components.md、api.md 等）
 │   ├── index.md                # 参考文档索引，说明各文档的加载时机
@@ -468,7 +468,7 @@ graph TD
 │       ├── tauri.md            # Tauri 桌面应用测试策略
 │       ├── web.md              # Web 应用测试策略（含 Smoke Test、Vitest 环境隔离等）
 │       └── worker.md           # Worker/服务端测试策略
-├── CLAUDE-template.md          # 新项目初始化时的 CLAUDE.md 种子文件
+├── CLAUDE-template.md          # 新项目 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes / Skill 激活规则）
 └── WORKFLOW.md                 # 本文档：工作流全局说明
 
 .agents/                        # AI Agent 运行时产物目录（所有阶段产出集中于此）
@@ -499,6 +499,7 @@ archive/                        # 历史归档目录（/close-phase 后归集）
 |------|---------|---------|---------|-----------------|
 | `.claude/commands/` | 永久 | 手动维护 | 所有命令触发时 | ✅ 按需加载指令 |
 | `.claude/reference/` | 永久 | `/ref-research` | 明确引用时 | ✅ 按需加载（硬隔离） |
+| `.claude/reference/test-strategies/` | 永久 | `/execute`、`/verify-phase` | TDD 阶段按项目类型加载 | ✅ 按需加载 |
 | `.agents/plans/` | Phase 生命周期 | `/plan-feature`、`/execute` | `/execute`、`/verify-phase` | ✅ 执行期主动读取 |
 | `.agents/specs/` | Phase 生命周期 | `/plan-feature` | `/execute`、`/verify-phase` | ✅ 执行期主动读取 |
 | `.agents/reviews/` | Phase 生命周期 | `/code-review` | `/verify-phase`（仅存在性检查） | ❌ 仅存档，不加载 |

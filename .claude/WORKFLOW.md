@@ -35,7 +35,7 @@
 
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
-| **组件（Commands）** | `.claude/commands/` | 12 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit` |
+| **组件（Commands）** | `.claude/commands/` | 13 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix` |
 | **技能（Skills）** | `.claude/skills/` | 4 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
 | **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 测试命令分类） |
@@ -170,7 +170,7 @@ graph LR
 > 每个新功能/Phase 开始时执行。**不写代码，只产出计划。**
 > **渐进式披露原则**：规划阶段只新增最小必要上下文，优先产出一页式 `Spec-Lite`，避免冗长设计文档。
 
-### 节点 1-A：卫生检查（自动）、
+### 节点 1-A：卫生检查（自动）
 
 | 项目 | 内容 |
 |------|------|
@@ -455,7 +455,7 @@ graph TD
 
 ```
 .claude/                        # AICAM 工作流系统目录（不含项目业务代码）
-├── commands/                   # 12 个 slash 命令脚本（/discover、/execute 等）
+├── commands/                   # 13 个 slash 命令脚本（/discover、/execute、/hotfix 等）
 ├── skills/                     # 领域专项 Skill（api-contract-first、frontend-design 等）
 ├── reference/                  # 按需加载的参考文档（components.md、api.md 等）
 │   ├── index.md                # 参考文档索引，说明各文档的加载时机
