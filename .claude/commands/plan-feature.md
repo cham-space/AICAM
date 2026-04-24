@@ -41,6 +41,7 @@ Check if both `.agents/reference/` and `.claude/reference/` exist with overlappi
 Count total `.md` content size (excluding `.git/`, `node_modules/`, `target/`, `archive/`):
 
 - If > 300KB → **WARN**: `"⚠ Workspace markdown content is {X}KB. Historical docs may consume planning context budget. Run /close-phase to archive completed phases."`
+- If > 500KB → **CRITICAL WARNING**: `"🚨 CRITICAL: Workspace markdown is {X}KB — exceeds safe planning threshold. Planning quality will degrade significantly. Run /close-phase NOW before continuing."`
 
 > **This phase only warns. It does not auto-archive.**
 > Archiving is a destructive action handled by the dedicated `/close-phase` command.

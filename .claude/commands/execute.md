@@ -20,6 +20,12 @@ Read plan file: `$ARGUMENTS`
 - Note the validation commands to run
 - Review the testing strategy
 
+**AC ↔ Task Mapping Check (warning only — does not block):**
+
+Cross-check Spec-Lite AC list against plan Tasks:
+- `⚠ AC-{N} has no corresponding Task` → potential feature gap; mention to user before proceeding
+- `⚠ Task "{name}" is not linked to any AC` → scope creep risk; mention to user before proceeding
+
 ### Destructive Operation Gate
 
 Before executing ANY task, scan all commands and SQL in that task.
@@ -140,7 +146,46 @@ If any command fails:
 - Business workflow tests must pass (UI E2E or API workflow tests)
 - If API was touched, contract/naming validation from the plan must pass
 
-### 5. Final Verification
+### 5. Smoke Test（Mandatory Gate — cannot skip）
+
+After all validation commands pass:
+
+**5a. Read the checklist**
+
+Read `## Smoke Test Checklist` from the plan file.
+- If the section is missing → **STOP**: `"⚠ Plan is missing ## Smoke Test Checklist. Add the checklist to the plan, or get explicit user confirmation to skip."`
+
+**5b. Start the application**
+
+Start the application/service using the startup command from the plan (or infer from project type).
+Verify it starts without crash. If startup fails → enter bug fix flow, then re-run Smoke Test.
+
+**5c. Execute each checklist item**
+
+| Action | Expected | Result |
+|--------|----------|--------|
+| {item from checklist} | {expected behavior} | ✅ PASS / ❌ FAIL |
+
+Any ❌ → enter bug fix flow; re-run the **full** Smoke Test after each fix.
+
+**5d. Write the log**
+
+All items ✅ → append `## Smoke Test Log` to `.agents/plans/{phase-name}.summary.md`:
+
+```markdown
+## Smoke Test Log
+
+**Date**: {date}
+**All items passed**: ✅
+
+| Action | Expected | Result |
+|--------|----------|--------|
+| {item} | {expected behavior} | ✅ PASS |
+```
+
+**Hard gate**: `## Smoke Test Log` missing, or any ❌/⏸️ entry = Phase cannot proceed to `/verify-phase`.
+
+### 6. Final Verification
 
 Before completing, load the `verification-before-completion` skill.
 Run all verification commands fresh — evidence before assertions.

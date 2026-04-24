@@ -488,10 +488,9 @@ docs/                           # 项目文档目录（业务/设计文档，非
     └── YYYY-MM-DD-{topic}-design.md  # 完整设计稿：架构决策、API 设计、数据模型
 
 archive/                        # 历史归档目录（/close-phase 后归集）
-└── Phase{N}/                   # 按 Phase 分组
-    ├── {plan}.md               # 原始计划归档
-    ├── summary.md              # 执行摘要归档（AC ↔ test 追踪链入口）
-    └── VERIFICATION_REPORT.md  # 核验报告归档（AC 覆盖矩阵留存）
+├── PHASE{N}_VERIFICATION_REPORT.md  # 核验报告归档
+├── phase{n}-code-review.md     # Code Review 报告归档
+└── phase{n}-*.md               # 其他 Phase 文档归档
 ```
 
 ### 各目录对比
@@ -525,8 +524,10 @@ summary.md → ## Test Cases 表格
 .agents/reports/PHASE{N}_VERIFICATION_REPORT.md → ## 六、AC-Test 覆盖矩阵
     （AC ID / 验收标准 / 覆盖测试用例 / 测试文件 / 测试结果 / 状态）
     ↓ 归档后
-archive/Phase{N}/summary.md + archive/Phase{N}/VERIFICATION_REPORT.md
-    ↑ 历史追溯入口：CLAUDE.md 迭代日志 → archive/Phase{N}/
+archive/PHASE{N}_VERIFICATION_REPORT.md  ← 核验报告
+.agents/plans/archive/{phase{n}-plan}.md  ← 执行计划
+.agents/plans/archive/{phase{n}}.summary.md  ← 执行摘要
+    ↑ 历史追溯入口：CLAUDE.md 迭代日志 → archive/ + .agents/plans/archive/
 ```
 
 ### 两层文档说明
@@ -546,9 +547,9 @@ archive/Phase{N}/summary.md + archive/Phase{N}/VERIFICATION_REPORT.md
 ```
 CLAUDE.md 迭代日志
     → 找到 Phase{N} 条目
-    → archive/Phase{N}/summary.md        ← 该 Phase 测试清单
-    → archive/Phase{N}/VERIFICATION_REPORT.md  ← 该 Phase AC 覆盖矩阵
-    → archive/Phase{N}/{plan}.md         ← 原始计划含 Spec-Lite AC 列表
+    → .agents/plans/archive/{phase{n}}.summary.md  ← 该 Phase 测试清单
+    → archive/PHASE{N}_VERIFICATION_REPORT.md       ← 该 Phase AC 覆盖矩阵
+    → .agents/plans/archive/{phase{n}-plan}.md      ← 原始计划含 Spec-Lite AC 列表
 ```
 
 ---

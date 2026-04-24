@@ -14,7 +14,7 @@ Systematically audit a completed implementation phase by comparing the **plan** 
 **Core Principle**: Evidence over assumption. Every finding must be backed by a file read, command output, or diff — not guesswork.
 
 > **Pre-requisite (Node 3-A)**: Code Review should be completed before running this command.  
-> If not done, run `/requesting-code-review` first, or explicitly acknowledge and proceed.
+> If not done, run `/code-review [plan-file-path]` first.
 
 ---
 
@@ -33,6 +33,11 @@ If `$ARGUMENTS` is a phase name (e.g., `phase3`), scan:
 
 If no plan is found, stop with:
 > "Cannot verify without a plan file. Provide a path or phase name."
+
+**Phase number derivation** (needed for report naming `PHASE{N}_...`):
+1. Extract from plan filename prefix: `phase{N}-` → use `N`
+2. If no numeric prefix, read plan content for a `# Phase N` or `Phase N:` declaration
+3. If still undetermined, ask the user: `"What phase number is this? (e.g., 1, 2, 3)"`
 
 **Step 1b: Locate project context root**
 
@@ -267,9 +272,9 @@ Mandatory Gates: Unit={PASS/FAIL}, Workflow={PASS/FAIL}, Smoke={PASS/FAIL}, Runt
 Report written to: .agents/reports/PHASE{N}_VERIFICATION_REPORT.md
 
 Next step:
-- If Code Review not yet done → **strongly recommended** to run it first:  
-  `BASE_SHA=$(git rev-parse HEAD~1)` + `HEAD_SHA=$(git rev-parse HEAD)`  
-  Dispatch `superpowers:code-reviewer` subagent using the `code-reviewer.md` template; fix Critical/Important issues before archiving  
+- If Code Review not yet done → run `/code-review {plan-file-path}` in a **new session**
+  (context isolation required — do not run in the same session as verify-phase)
+  Fix all Critical issues before archiving
 - Run `/close-phase {phase-name}` to archive and distill to CLAUDE.md
 ```
 

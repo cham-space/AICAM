@@ -42,6 +42,11 @@ Scan workspace for phase-related documents using dynamic detection:
 Find the nearest `CLAUDE.md` in the workspace. The directory containing it is `{PROJECT_ROOT}`.
 If no `CLAUDE.md` exists, use the workspace root.
 
+**Phase number derivation** (needed for archive file naming `PHASE{N}_...`):
+1. Extract from plan filename prefix: `phase{N}-` → use `N`
+2. If no numeric prefix, read plan content for a `# Phase N` or `Phase N:` declaration
+3. If still undetermined, ask the user: `"What phase number is this? (e.g., 1, 2, 3)"`
+
 **Step 1b: Scan these locations**
 
 ```

@@ -488,10 +488,9 @@ docs/                           # Project documentation directory (business/desi
     └── YYYY-MM-DD-{topic}-design.md  # Full design: architecture decisions, API design, data models
 
 archive/                        # Historical archive directory (collected after /close-phase)
-└── Phase{N}/                   # Grouped by Phase
-    ├── {plan}.md               # Raw plan archive
-    ├── summary.md              # Execution summary archive (AC ↔ test traceability chain entry)
-    └── VERIFICATION_REPORT.md  # Verification report archive (AC coverage matrix retained)
+├── PHASE{N}_VERIFICATION_REPORT.md  # Archived verification report
+├── phase{n}-code-review.md     # Archived code review report
+└── phase{n}-*.md               # Other archived Phase documents
 ```
 
 ### Directory Comparison
@@ -524,8 +523,10 @@ summary.md → ## Test Cases table
 .agents/reports/PHASE{N}_VERIFICATION_REPORT.md → ## 6. AC-Test Coverage Matrix
     (AC ID / acceptance criteria / covered test case / test file / test result / status)
     ↓ After Archiving
-archive/Phase{N}/summary.md + archive/Phase{N}/VERIFICATION_REPORT.md
-    ↑ Historical traceability entry: CLAUDE.md iteration log → archive/Phase{N}/
+archive/PHASE{N}_VERIFICATION_REPORT.md  ← Verification report
+.agents/plans/archive/{phase{n}-plan}.md  ← Execution plan
+.agents/plans/archive/{phase{n}}.summary.md  ← Execution summary
+    ↑ Historical traceability entry: CLAUDE.md iteration log → archive/ + .agents/plans/archive/
 ```
 
 ### Two-Layer Document Description
@@ -545,9 +546,9 @@ archive/Phase{N}/summary.md + archive/Phase{N}/VERIFICATION_REPORT.md
 ```
 CLAUDE.md iteration log
     → Find Phase{N} entry
-    → archive/Phase{N}/summary.md        ← Test list for this Phase
-    → archive/Phase{N}/VERIFICATION_REPORT.md  ← AC coverage matrix for this Phase
-    → archive/Phase{N}/{plan}.md         ← Raw plan with Spec-Lite AC list
+    → .agents/plans/archive/{phase{n}}.summary.md  ← Test list for this Phase
+    → archive/PHASE{N}_VERIFICATION_REPORT.md       ← AC coverage matrix for this Phase
+    → .agents/plans/archive/{phase{n}-plan}.md      ← Raw plan with Spec-Lite AC list
 ```
 
 ---
