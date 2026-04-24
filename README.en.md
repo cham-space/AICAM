@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.2.0 | 2026-04-23
+> Version: v1.2.1 | 2026-04-24
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -12,6 +12,7 @@
 | v1.0.0 | 2026-04-19 | Initial release: 5-Phase workflow + 12 commands + 5 skills + Mermaid visualization |
 | v1.1.0 | 2026-04-21 | Added Smoke Test gate, tightened TDD exemption scope, ⏸️ hard-fail rule, TEST_DASHBOARD tracking, skills list correction (frontend-design replaces skill-creator) |
 | v1.2.0 | 2026-04-23 | Added Simplicity First / Surgical Changes / explicit Skill activation rules; removed ui-ux-pro-max (missing core scripts); workspace skills trimmed to 4; reference index internationalized |
+| v1.2.1 | 2026-04-24 | **Commands**: new `/hotfix` (skip planning, direct fix flow), command count 12→13; **Gates**: `/execute` adds mandatory Smoke Test gate + AC↔Task mapping check; **Planning**: `/plan-feature` adds critical warning for >500KB workspace; **Archival**: flatten archive structure (`Phase{N}/` subdirs → flat files), `/close-phase` + `/verify-phase` add automatic Phase number derivation; **MCP**: add serena + typescript-lsp installation & configuration guide; **Misc**: e2e-test SKILL remaining Chinese translated to English, `.serena/` added to `.gitignore` |
 
 ---
 

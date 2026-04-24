@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.2.0 | 2026-04-23
+> 版本: v1.2.1 | 2026-04-24
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -12,6 +12,7 @@
 | v1.0.0 | 2026-04-19 | 初始版本：5 Phase 工作流 + 12 命令 + 5 技能 + Mermaid 可视化 |
 | v1.1.0 | 2026-04-21 | 新增 Smoke Test 门禁、TDD 不可豁免范围收紧、⏸️ 状态硬规则、TEST_DASHBOARD 跟踪、技能列表校准（frontend-design 替换 skill-creator） |
 | v1.2.0 | 2026-04-23 | 新增 Simplicity First / Surgical Changes / 显式 Skill 激活规则；删除 ui-ux-pro-max（缺失核心脚本）；工作区 Skill 精简为 4 个；参考文档索引国际化 |
+| v1.2.1 | 2026-04-24 | **命令**：新增 `/hotfix`（跳过规划直接修复）、命令总数 12→13；**门禁**：`/execute` 新增 Smoke Test 强制门禁 + AC↔Task 映射检查；**规划**：`/plan-feature` 新增 >500KB 工作区临界警告；**归档**：扁平化 archive 结构（`Phase{N}/` 子目录 → 扁平文件）、`/close-phase` + `/verify-phase` 新增 Phase 编号自动推导；**MCP**：新增 serena + typescript-lsp 安装配置指南；**其他**：e2e-test SKILL 残留中文英化、`.serena/` 加入 `.gitignore` |
 
 ---
 
