@@ -47,6 +47,7 @@
 1. **New Project**: Copy the `.claude/` directory to the project root, then run `/discover` to begin.
 2. **Existing Project**: Copy to an existing project, skip Phase 0, start directly from `/plan-feature`.
 3. **Iteration**: Each feature independently completes all 5 phases before archiving; CLAUDE.md stays lean and maintainable.
+4. **Emergency Fix**: When a clearly scoped production bug appears, use `/hotfix` to skip Phase 1 planning and jump directly to the TDD fix flow (Smoke Test + Code Review gates still apply).
 
 ### CLAUDE-template.md Key Features
 
@@ -77,6 +78,7 @@ graph LR
     D --> E["/init-project\nPhase 0-E Init Environment"]
     E --> F["/prime\nPhase 0-F Restart Session"]
     F --> G["Phase 1\nFeature Planning"]
+    H["/hotfix\nEmergency Fix"] --> I["Phase 2\nTDD Fix"]
 
     style A fill:#e1f5fe
     style B fill:#e1f5fe
@@ -85,6 +87,8 @@ graph LR
     style E fill:#e1f5fe
     style F fill:#e1f5fe
     style G fill:#fff3e0
+    style H fill:#ffcdd2
+    style I fill:#ffcdd2
 ```
 
 ---
@@ -275,6 +279,21 @@ graph LR
 | **Output** | `## Smoke Test Log` table in summary.md (with operation → expected → result) |
 | **Next Step** | → 3-A |
 
+### Node 2-F: Emergency Fix (Hotfix)
+
+| Item | Content |
+|------|---------|
+| **Command** | `/hotfix [bug description or issue reference]` |
+| **Trigger** | Manual, when a clearly scoped production bug appears |
+| **Role** | Agent |
+| **Skipped** | Phase 1 (plan-feature, Spec-Lite generation) |
+| **Not Skipped** | TDD gate, Smoke Test, Code Review, verify-phase, close-phase |
+| **Scope** | Bugs with clear and narrow fix scope (≤3 files, no new API/DB migration) |
+| **Actions** | 1. **Scope check**: estimate impact files; if exceeds limit, suggest `/plan-feature`<br>2. **Create Hotfix Plan**: inline minimal plan to `.agents/plans/hotfix-{YYYY-MM-DD}-{slug}.summary.md` (with Smoke Test Checklist + TDD Log)<br>3. **Reproduce & Root Cause**: write failing test that reproduces the bug → confirm red → identify root cause<br>4. **Destructive operation gate**: same as `/execute` — `DROP`/`TRUNCATE`/unconditional `DELETE`/`rm -rf` require user confirmation<br>5. **Implement fix**: minimum code to make test green, no adjacent refactoring<br>6. **Run full regression**: all existing tests must pass<br>7. **Smoke Test**: execute Checklist items, all ✅ required to continue |
+| **Output** | `.agents/plans/hotfix-{YYYY-MM-DD}-{slug}.summary.md` (with TDD Log + Smoke Test Log) |
+| **After completion** | Prompt user to execute in order: 1. new session `/code-review` → 2. fix Critical → 3. `/verify-phase` → 4. `/close-phase` → 5. `/commit` |
+| **Safety Rules** | Exceeding scope must switch to `/plan-feature`; TDD is non-negotiable; no silent refactoring; CLAUDE.md iteration log entry tagged `[hotfix]` |
+
 ---
 
 ## 6. Phase 3: Verification
@@ -397,12 +416,19 @@ graph TD
         P5A["/commit\nGenerate Atomic Commit"]
     end
 
+    subgraph Hotfix["Hotfix: Emergency Fix"]
+        H0["/hotfix\nScope Check"] --> H1["TDD Reproduce\nWrite Failing Test"]
+        H1 --> H2["Implement Fix\nMinimum Code"]
+        H2 --> H3["Full Regression\n+ Smoke Test"]
+    end
+
     Phase0 -->|"Loop for Each New Feature"| Phase1
     Phase1 -->|"After User Confirmation"| Phase2
     Phase2 -->|"After Implementation\n⚠️ /code-review Mandatory"| Phase3
     Phase3 -->|"After Verification Pass"| Phase4
     Phase4 -->|"After Archiving"| Phase5
     Phase5 -.->|"Next Feature"| Phase1
+    Hotfix -->|"After Fix\n⚠️ /code-review Mandatory"| Phase3
 
     classDef phase0 fill:#e1f5fe
     classDef phase1 fill:#fff3e0
@@ -410,12 +436,14 @@ graph TD
     classDef phase3 fill:#fce4ec
     classDef phase4 fill:#f3e5f5
     classDef phase5 fill:#fff8e1
+    classDef hotfix fill:#ffcdd2
     class P0A,P0B,P0C,P0D,P0E,P0F phase0
     class P1A,P1B,P1C phase1
     class P2A,P2B,P2C,P2D,P2E phase2
     class P3A,P3B,P3R phase3
     class P4A,P4B,P4R phase4
     class P5A phase5
+    class H0,H1,H2,H3 hotfix
 ```
 
 ---
@@ -441,6 +469,7 @@ graph TD
 | `.claude/reference/api.md` | Phase 0 Node 0-C | Project root, permanently retained |
 | `.agents/plans/{phase}.md` | `/plan-feature` | After execution → `archive/` |
 | `.agents/plans/{phase}.summary.md` | Auto at end of `/execute` | After execution → `archive/` |
+| `.agents/plans/hotfix-{date}-{slug}.summary.md` | Inline by `/hotfix` | After fix → `archive/` |
 | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` | `/verify-phase` | After verification → `archive/` |
 | `.agents/reports/TEST_DASHBOARD.md` | `/close-phase` | Permanently retained, human review only |
 | `CLAUDE.md Iteration Log Entry` | `/close-phase` | Permanently retained (compressed form) |
@@ -694,6 +723,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 15. **Simplicity First**: During Phase 2 implementation, write the minimum code necessary to satisfy the current Spec-Lite AC; do not introduce speculative features; do not create abstractions unless reused in ≥2 places within the same Phase; do not handle error scenarios not defined in the Spec-Lite; if 50 lines can solve the problem, don't write 200.
 16. **Surgical Changes**: Only modify exactly what the request requires — do not "improve" adjacent code, comments, or formatting; follow existing code style even if you would do it differently; flag unrelated dead code instead of silently deleting it; clean up unused imports/variables introduced by your changes, leave pre-existing dead code alone; every changed line must trace back to the user's request.
 17. **Explicit Skill Activation Rules**: Do not rely on auto-matching. Frontend components/pages → explicitly load `frontend-design`; API definition/field mapping → explicitly load `api-contract-first`; business workflow testing → explicitly load `e2e-test`. Workspace skills stay lean — remove skills missing core scripts (e.g., the deleted ui-ux-pro-max).
+18. **Hotfix Scope Discipline**: `/hotfix` is only for bugs with clear and narrow scope (≤3 files, no new API/DB migration); exceeding scope must switch to `/plan-feature`; TDD gate is non-negotiable; CLAUDE.md iteration log entry tagged `[hotfix]` to distinguish from regular Phase iterations.
 
 ---
 

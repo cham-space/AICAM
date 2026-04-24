@@ -47,6 +47,7 @@
 1. **新项目**：将 `.claude/` 目录整体复制到项目根目录，运行 `/discover` 开始
 2. **已有项目**：复制到已有项目后，跳过 Phase 0，直接从 `/plan-feature` 开始
 3. **迭代**：每个新功能独立走完 5 个 Phase 后归档，CLAUDE.md 保持精简可维护
+4. **紧急修复**：生产环境出现明确范围的 Bug 时，使用 `/hotfix` 跳过 Phase 1 规划，直接进入 TDD 修复流程（Smoke Test + Code Review 门禁仍适用）
 
 ### CLAUDE-template.md 核心特性
 
@@ -77,6 +78,7 @@ graph LR
     D --> E["/init-project\nPhase 0-E 初始化环境"]
     E --> F["/prime\nPhase 0-F 重启会话"]
     F --> G["Phase 1\n功能规划"]
+    H["/hotfix\n紧急修复"] --> I["Phase 2\nTDD修复"]
 
     style A fill:#e1f5fe
     style B fill:#e1f5fe
@@ -85,6 +87,8 @@ graph LR
     style E fill:#e1f5fe
     style F fill:#e1f5fe
     style G fill:#fff3e0
+    style H fill:#ffcdd2
+    style I fill:#ffcdd2
 ```
 
 ---
@@ -275,6 +279,21 @@ graph LR
 | **产出物** | summary.md 中的 `## Smoke Test Log` 表格（含操作→预期→结果） |
 | **下一步** | → 3-A |
 
+### 节点 2-F：紧急修复（Hotfix）
+
+| 项目 | 内容 |
+|------|------|
+| **命令** | `/hotfix [bug 描述或 issue 编号]` |
+| **触发方式** | 手动，生产环境出现明确范围的 Bug 时 |
+| **执行角色** | Agent |
+| **跳过** | Phase 1（plan-feature、Spec-Lite 生成） |
+| **不跳过** | TDD 门禁、Smoke Test、Code Review、verify-phase、close-phase |
+| **适用范围** | 修复范围明确且狭窄（≤3 个文件、无新 API/DB 迁移）的生产或关键 Bug |
+| **动作** | 1. **范围检查**：估算影响文件数，超限则提示改用 `/plan-feature`<br>2. **创建 Hotfix Plan**：内联最小计划写入 `.agents/plans/hotfix-{YYYY-MM-DD}-{slug}.summary.md`（含 Smoke Test Checklist + TDD Log）<br>3. **复现与根因**：先写复现 Bug 的失败测试 → 确认红灯 → 定位根因<br>4. **破坏性操作门禁**：同 `/execute`，`DROP`/`TRUNCATE`/无条件 `DELETE`/`rm -rf` 必须用户确认<br>5. **实施修复**：最小代码使测试变绿，不重构相邻代码<br>6. **运行全量回归测试**：现有测试全部通过，不回归<br>7. **Smoke Test**：执行 Checklist 逐条验证，全部 ✅ 才能继续 |
+| **产出物** | `.agents/plans/hotfix-{YYYY-MM-DD}-{slug}.summary.md`（含 TDD Log + Smoke Test Log） |
+| **完成后** | 提示用户按序执行：1. 新会话 `/code-review` → 2. 修复 Critical → 3. `/verify-phase` → 4. `/close-phase` → 5. `/commit` |
+| **安全规则** | 范围超限必须转 `/plan-feature`；TDD 不可豁免；不允许静默重构；CLAUDE.md 迭代日志条目标记 `[hotfix]` |
+
 ---
 
 ## 6. Phase 3：核验
@@ -397,12 +416,19 @@ graph TD
         P5A["/commit\n生成原子提交"]
     end
 
+    subgraph Hotfix["Hotfix：紧急修复"]
+        H0["/hotfix\n范围检查"] --> H1["TDD复现\n写失败测试"]
+        H1 --> H2["实施修复\n最小代码"]
+        H2 --> H3["全量回归\n+ Smoke Test"]
+    end
+
     Phase0 -->|"每个新功能循环"| Phase1
     Phase1 -->|"用户确认后"| Phase2
     Phase2 -->|"实施完成后\n⚠️ /code-review 强制"| Phase3
     Phase3 -->|"核验通过后"| Phase4
     Phase4 -->|"归档完成后"| Phase5
     Phase5 -.->|"下一个功能"| Phase1
+    Hotfix -->|"修复完成后\n⚠️ /code-review 强制"| Phase3
 
     classDef phase0 fill:#e1f5fe
     classDef phase1 fill:#fff3e0
@@ -410,12 +436,14 @@ graph TD
     classDef phase3 fill:#fce4ec
     classDef phase4 fill:#f3e5f5
     classDef phase5 fill:#fff8e1
+    classDef hotfix fill:#ffcdd2
     class P0A,P0B,P0C,P0D,P0E,P0F phase0
     class P1A,P1B,P1C phase1
     class P2A,P2B,P2C,P2D,P2E phase2
     class P3A,P3B,P3R phase3
     class P4A,P4B,P4R phase4
     class P5A phase5
+    class H0,H1,H2,H3 hotfix
 ```
 
 ---
@@ -441,6 +469,7 @@ graph TD
 | `.claude/reference/api.md` | Phase 0 节点 0-C | 项目根目录，永久保留 |
 | `.agents/plans/{phase}.md` | `/plan-feature` | 执行后 → `archive/` |
 | `.agents/plans/{phase}.summary.md` | `/execute` 末尾自动 | 执行后 → `archive/` |
+| `.agents/plans/hotfix-{date}-{slug}.summary.md` | `/hotfix` 内联生成 | 修复后 → `archive/` |
 | `.agents/reports/PHASE{N}_VERIFICATION_REPORT.md` | `/verify-phase` | 核验后 → `archive/` |
 | `.agents/reports/TEST_DASHBOARD.md` | `/close-phase` | 永久保留，人工查阅 |
 | `CLAUDE.md 迭代日志条目` | `/close-phase` | 永久保留（压缩形式） |
@@ -694,6 +723,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 15. **Simplicity First（简约至上）**：Phase 2 实施阶段，仅写最小必要代码满足当前 Spec-Lite AC；不引入推测性特性；除非本 Phase 内 ≥2 处复用才做抽象；不处理 Spec-Lite 未定义的错误场景；50 行能解决的问题不写 200 行
 16. **Surgical Changes（精准手术）**：仅修改请求明确要求的内容，不"改善"相邻代码/注释/格式；遵循现有代码风格即使你不同意；发现无关死代码只提示不静默删除；清理本次变更产生的未使用导入/变量，保留既有的死代码；每一行变更必须可追溯到用户请求
 17. **显式 Skill 激活规则**：不依赖自动匹配。前端组件/页面 → 显式加载 `frontend-design`；API 定义/字段联调 → 显式加载 `api-contract-first`；业务功能测试 → 显式加载 `e2e-test`。工作区 Skill 保持精简，移除缺失核心脚本的 Skill（如已删除的 ui-ux-pro-max）
+18. **Hotfix 范围纪律**：`/hotfix` 仅用于范围明确且狭窄的 Bug（≤3 文件、无新 API/DB 迁移）；超限必须转 `/plan-feature`；TDD 门禁不可豁免；CLAUDE.md 迭代日志条目标记 `[hotfix]` 以区分常规 Phase 迭代
 
 ---
 
