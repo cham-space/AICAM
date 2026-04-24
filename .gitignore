@@ -8,6 +8,9 @@
 .agents/reviews/*.md
 .agents/reports/*.md
 
+# Serena MCP local config
+.serena/
+
 # Environment
 .env
 .env.*

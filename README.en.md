@@ -574,7 +574,93 @@ CLAUDE.md iteration log
 | Tool | Capability | Most Applicable Phase |
 |------|------------|----------------------|
 | `serena` | Symbol-level semantic navigation, cross-file rename/reference lookup, 40+ language support; replaces line-by-line grep in large complex codebases | Phase 2 Implementation (large project refactoring / navigation) |
-| `typescript-lsp` | TypeScript language server: semantic type checking, symbol analysis, type error detection without running a compiler | Phase 2 Implementation (TS projects) + Phase 3 Verification commands |
+| `typescript-lsp` | TypeScript language server: semantic type checking, symbol analysis, AST search, diagnostics, refactoring, call/type hierarchy; requires `tsconfig.json` in project root | Phase 2 Implementation (TS projects) + Phase 3 Verification commands |
+
+### MCP Installation & Configuration
+
+> **Must be installed before first use.** Once installed, available globally across all projects.
+
+#### Prerequisites
+
+| Dependency | Purpose | Check |
+|------------|---------|-------|
+| [uv](https://docs.astral.sh/uv/) | Python package manager (required by serena) | `uv --version` |
+| Node.js + npm | npm package manager (required by typescript-lsp) | `node --version && npm --version` |
+
+#### 1. Install serena
+
+```bash
+# Install (first time only, use Python 3.13 for compatibility)
+uv tool install -p 3.13 serena-agent@latest --prerelease=allow
+
+# Initialize configuration
+serena init
+
+# One-line Claude Code setup
+serena setup claude-code
+```
+
+`serena setup claude-code` automatically registers the MCP server in `~/.claude/settings.json`.
+
+#### 2. Install typescript-lsp
+
+```bash
+# Install globally
+npm install -g ts-language-mcp
+
+# Register with Claude Code (global scope)
+claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp
+```
+
+> Note: `typescript-lsp` only activates when the project root contains `tsconfig.json`. Calling it in non-TS projects will produce an error — this is expected behavior.
+
+#### 3. Configure serena Hooks (Recommended)
+
+Add hooks to `~/.claude/settings.json` to prevent the Agent from falling back to grep/read loops instead of using symbol tools:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks remind --client=claude-code" }]
+      },
+      {
+        "matcher": "mcp__serena__*",
+        "hooks": [{ "type": "command", "command": "serena-hooks auto-approve --client=claude-code" }]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks activate --client=claude-code" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks cleanup --client=claude-code" }]
+      }
+    ]
+  }
+}
+```
+
+#### 4. Verify Installation
+
+```bash
+# Check MCP server connection status
+claude mcp list
+```
+
+Expected output:
+```
+serena: serena start-mcp-server --context=claude-code --project-from-cwd - ✓ Connected
+typescript-lsp: npx -y ts-language-mcp - ✓ Connected
+```
+
+> Restart the Claude Code session for new MCP tools to take effect.
 
 ---
 

@@ -574,7 +574,93 @@ CLAUDE.md 迭代日志
 | 工具 | 能力 | 最适用阶段 |
 |------|------|------------|
 | `serena` | 符号级语义导航、跨文件重命名/引用查找、40+ 语言支持；大型复杂代码库中替代逐行 grep | Phase 2 实施（大型项目重构/导航） |
-| `typescript-lsp` | TypeScript 语言服务器：语义类型检查、符号分析、未运行编译器即可发现类型错误 | Phase 2 实施（TS 项目）+ Phase 3 核验命令 |
+| `typescript-lsp` | TypeScript 语言服务器：语义类型检查、符号分析、AST 搜索、诊断、重构、调用/类型层级分析；需项目含 `tsconfig.json` | Phase 2 实施（TS 项目）+ Phase 3 核验命令 |
+
+### MCP 安装与配置
+
+> **首次使用前必须安装**，安装后全局生效，所有项目均可调用。
+
+#### 前置依赖
+
+| 依赖 | 用途 | 安装检查 |
+|------|------|----------|
+| [uv](https://docs.astral.sh/uv/) | Python 包管理器（serena 依赖） | `uv --version` |
+| Node.js + npm | npm 包管理（typescript-lsp 依赖） | `node --version && npm --version` |
+
+#### 1. 安装 serena
+
+```bash
+# 安装（首次需要，使用 Python 3.13 以确保兼容性）
+uv tool install -p 3.13 serena-agent@latest --prerelease=allow
+
+# 初始化配置
+serena init
+
+# 一键配置 Claude Code
+serena setup claude-code
+```
+
+`serena setup claude-code` 会自动将 MCP server 注册到 `~/.claude/settings.json`。
+
+#### 2. 安装 typescript-lsp
+
+```bash
+# 全局安装
+npm install -g ts-language-mcp
+
+# 注册到 Claude Code（全局生效）
+claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp
+```
+
+> 注意：`typescript-lsp` 仅在项目根目录含 `tsconfig.json` 时激活。非 TS 项目中调用会报错，属正常现象。
+
+#### 3. 配置 serena Hooks（推荐）
+
+在 `~/.claude/settings.json` 中添加 hooks，防止 Agent 回退到 grep/read 循环而忽略符号工具：
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks remind --client=claude-code" }]
+      },
+      {
+        "matcher": "mcp__serena__*",
+        "hooks": [{ "type": "command", "command": "serena-hooks auto-approve --client=claude-code" }]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks activate --client=claude-code" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "serena-hooks cleanup --client=claude-code" }]
+      }
+    ]
+  }
+}
+```
+
+#### 4. 验证安装
+
+```bash
+# 检查 MCP 服务连接状态
+claude mcp list
+```
+
+预期输出：
+```
+serena: serena start-mcp-server --context=claude-code --project-from-cwd - ✓ Connected
+typescript-lsp: npx -y ts-language-mcp - ✓ Connected
+```
+
+> 重启 Claude Code 会话后，新的 MCP 工具即可使用。
 
 ---
 
