@@ -520,7 +520,7 @@ graph TD
 
 ```
 .claude/                        # AICAM 工作流系统目录（不含项目业务代码）
-├── commands/                   # 13 个 slash 命令脚本（/discover、/execute、/hotfix 等）
+├── commands/                   # 16 个 slash 命令脚本（/discover、/execute、/aicam 等）
 ├── skills/                     # 领域专项 Skill（api-contract-first、frontend-design 等）
 ├── reference/                  # 按需加载的参考文档（components.md、api.md 等）
 │   ├── index.md                # 参考文档索引，说明各文档的加载时机
@@ -533,6 +533,13 @@ graph TD
 │       ├── tauri.md            # Tauri 桌面应用测试策略
 │       ├── web.md              # Web 应用测试策略（含 Smoke Test、Vitest 环境隔离等）
 │       └── worker.md           # Worker/服务端测试策略
+├── gates/                       # 6 个门禁定义文件（独立于命令脚本，可复用）
+│   ├── tdd.gate.md              # TDD 红-绿-重构门禁
+│   ├── smoke.gate.md            # Smoke Test 门禁
+│   ├── security.gate.md         # 安全扫描门禁（gitleaks + semgrep + 依赖审计）
+│   ├── contract.gate.md         # API 契约/命名一致性门禁
+│   ├── destructive-op.gate.md   # 危险操作检测门禁
+│   └── coverage.gate.md         # 覆盖率门禁
 ├── CLAUDE-template.md          # 新项目 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes / Skill 激活规则）
 └── WORKFLOW.md                 # 本文档：工作流全局说明
 
@@ -759,6 +766,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 16. **Surgical Changes（精准手术）**：仅修改请求明确要求的内容，不"改善"相邻代码/注释/格式；遵循现有代码风格即使你不同意；发现无关死代码只提示不静默删除；清理本次变更产生的未使用导入/变量，保留既有的死代码；每一行变更必须可追溯到用户请求
 17. **显式 Skill 激活规则**：不依赖自动匹配。前端组件/页面 → 显式加载 `frontend-design`；API 定义/字段联调 → 显式加载 `api-contract-first`；业务功能测试 → 显式加载 `e2e-test`。工作区 Skill 保持精简，移除缺失核心脚本的 Skill（如已删除的 ui-ux-pro-max）
 18. **Hotfix 范围纪律**：`/hotfix` 仅用于范围明确且狭窄的 Bug（≤3 文件、无新 API/DB 迁移）；超限必须转 `/plan-feature`；TDD 门禁不可豁免；CLAUDE.md 迭代日志条目标记 `[hotfix]` 以区分常规 Phase 迭代
+19. **安全扫描不可静默跳过**：`/commit` 前必须至少有一层安全扫描可执行（gitleaks/semgrep/SCA）；全部工具缺失时提供 Docker fallback 或用户书面确认（`CONFIRM-SKIP`）路径；无任何解析 → ❌ 阻断提交
 
 ---
 

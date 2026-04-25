@@ -520,7 +520,7 @@ graph TD
 
 ```
 .claude/                        # AICAM workflow system directory (excludes project business code)
-├── commands/                   # 13 slash command scripts (/discover, /execute, /hotfix, etc.)
+├── commands/                   # 16 slash command scripts (/discover, /execute, /aicam, etc.)
 ├── skills/                     # Domain-specific skills (api-contract-first, frontend-design, etc.)
 ├── reference/                  # On-demand reference documents (components.md, api.md, etc.)
 │   ├── index.md                # Reference document index, describing when each doc is loaded
@@ -533,6 +533,13 @@ graph TD
 │       ├── tauri.md            # Tauri desktop app test strategy
 │       ├── web.md              # Web app test strategy (includes Smoke Test, Vitest env isolation, etc.)
 │       └── worker.md           # Worker/server-side test strategy
+├── gates/                       # 6 gate definitions (decoupled from command scripts, reusable)
+│   ├── tdd.gate.md              # TDD red-green-refactor gate
+│   ├── smoke.gate.md            # Smoke Test gate
+│   ├── security.gate.md         # Security scan gate (gitleaks + semgrep + dependency audit)
+│   ├── contract.gate.md         # API contract/naming consistency gate
+│   ├── destructive-op.gate.md   # Destructive operation detection gate
+│   └── coverage.gate.md         # Coverage gate
 ├── CLAUDE-template.md          # Seed file for CLAUDE.md during new project initialization
 └── WORKFLOW.md                 # This document: global workflow description
 
@@ -759,6 +766,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 16. **Surgical Changes**: Only modify exactly what the request requires — do not "improve" adjacent code, comments, or formatting; follow existing code style even if you would do it differently; flag unrelated dead code instead of silently deleting it; clean up unused imports/variables introduced by your changes, leave pre-existing dead code alone; every changed line must trace back to the user's request.
 17. **Explicit Skill Activation Rules**: Do not rely on auto-matching. Frontend components/pages → explicitly load `frontend-design`; API definition/field mapping → explicitly load `api-contract-first`; business workflow testing → explicitly load `e2e-test`. Workspace skills stay lean — remove skills missing core scripts (e.g., the deleted ui-ux-pro-max).
 18. **Hotfix Scope Discipline**: `/hotfix` is only for bugs with clear and narrow scope (≤3 files, no new API/DB migration); exceeding scope must switch to `/plan-feature`; TDD gate is non-negotiable; CLAUDE.md iteration log entry tagged `[hotfix]` to distinguish from regular Phase iterations.
+19. **Security scanning must not be silently skipped**: At least one security scan layer (gitleaks/semgrep/SCA) must be executable before `/commit`; when all tools are missing, provide Docker fallback or user written confirmation (`CONFIRM-SKIP`) path; no resolution → ❌ blocks commit.
 
 ---
 
