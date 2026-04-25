@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.3.2 | 2026-04-25
+> 版本: v1.3.3 | 2026-04-25
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -16,6 +16,7 @@
 | **v1.3.0** | **2026-04-25** | **架构**：新增门禁适配器层（`.claude/gates/` 6个Gate文件）解耦门禁定义与命令脚本；**安全**：集成 gitleaks(Secrets) + semgrep(SAST) + 依赖审计(SCA) + pre-commit hook + CI pipeline模板；**命令**：新增 `/diagnose`(健康诊断) + `/onboard`(交互引导)、命令总数 13→15；**Skills**：agent-browser 合并至 e2e-test + 新增 `backend-test`(后端测试执行)、前后端Skill 2:2均衡；**度量**：M1-M5五维指标 + TEST_DASHBOARD升级为自动计算+趋势预警；**流程**：`/discover` Path A 3问门控 + `/code-review` Diff 范围约束 + `/hotfix` 回归范围声明 + plan-template Risk Register + Test Data Strategy；**文档**：CLAUDE-template 增加安全扫描指引章节 |
 | **v1.3.1** | **2026-04-25** | **CI**：重构为生态自适应流水线（preflight 输出 ecosystem+project_type 驱动条件步骤）+ 新增 oasdiff Breaking Change 检测 step + Smoke Test 充实实际命令；**门禁**：contract.gate 新增 oasdiff 工具 + spec 归档协议、coverage.gate 修复损坏标题 + 新增 5 生态工具表；**度量**：M1 改用 git log 自动计算 + 跨平台 fallback（macOS stat / Linux date -r）；**韧性**：/diagnose 新增门禁执行完整度校验（anti-truncation）+ /verify-phase 新增 TDD/Smoke 条目数对比门禁（anti-bypass）+ CLAUDE-template 新增 Known Issues 持久节 + /close-phase 自动提取未解决问题；**工程**：commit-msg hook 强制 Conventional Commits + plan-feature 子代理容错规则 + commit.md 安全扫描步骤 + prime.md / WORKFLOW.md §11-A 文档同步 |
 | **v1.3.2** | **2026-04-25** | **Bug 修复**：Python rest-api smoke fallback 逻辑修复（`[ -n "$SERVER_PID" ]` 死代码 → `python -c "import uvicorn"` 可用性检测，Flask/Django 项目现可正确 fallback 到 `python app.py`）；/diagnose Section 5 安全工具表新增 commit-msg hook 检查行（symlink 安装状态可见）；**质量**：第五轮独立评估确认问题密度持续收敛（P0/P1 清零，3 项新发现均在 P1/P2 级） |
+| **v1.3.3** | **2026-04-25** | **安全**：security.gate 新增 Layer 0 工具可用性预检（anti-silent-bypass）+ Docker fallback + 用户确认协议；/commit 安全扫描升级为强制门禁（全部工具缺失 → ❌ 阻断提交）；/diagnose Section 5 新增 Security Gate Viability 评估；**命令**：新增 `/aicam` 交互式工作流指南（16 个命令速查 + 按 Phase 导航 + Skill/Gate 参考），命令总数 15→16 |
 
 ---
 
@@ -39,7 +40,7 @@
 
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
-| **组件（Commands）** | `.claude/commands/` | 15 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix`、`/diagnose`、`/onboard` |
+| **组件（Commands）** | `.claude/commands/` | 16 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix`、`/diagnose`、`/onboard`、`/aicam` |
 | **技能（Skills）** | `.claude/skills/` | 4 个 | `frontend-design`、`api-contract-first`、`e2e-test`(合并agent-browser)、`backend-test` |
 | **门禁（Gates）** | `.claude/gates/` | 6 个 | `tdd.gate.md`、`smoke.gate.md`、`security.gate.md`、`contract.gate.md`、`destructive-op.gate.md`、`coverage.gate.md` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
@@ -78,7 +79,7 @@
 ```
 L0 — 零配置即用（< 5 分钟）
     适用: 紧急修复、单个文件改动
-    命令: /hotfix
+    命令: /hotfix, /aicam
     依赖: 无
 
 L1 — 最小配置（< 15 分钟）
