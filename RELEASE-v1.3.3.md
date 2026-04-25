@@ -1,83 +1,135 @@
 # AICAM v1.3.3 Release Notes
 
-> **Release date**: 2026-04-25
-> **Previous version**: v1.3.2
-> **Type**: Minor — feature enhancement + security hardening
+> **Release Date**: 2026-04-25
+> **Since**: v1.3.2
+> **Type**: Minor — security hardening + new command
 
 ---
 
-## Summary
+## 🔐 Security
 
-v1.3.3 addresses the P0-1 security vulnerability (silent bypass of security gate when scan tools are uninstalled) identified in the maturity assessment, and introduces `/aicam`, an interactive workflow guide command to lower the learning curve for new users.
+### Anti-Silent-Bypass Gate (P0-1 Fix)
 
----
+**security.gate.md** gains **Layer 0: Tool Availability Pre-check** — executed before any scan:
 
-## Changes
+| Condition | Action |
+|-----------|--------|
+| ≥1 native tool (gitleaks/semgrep) available | Proceed to actual scan |
+| All native tools missing + Docker available | Use Docker fallback commands |
+| All tools missing + no Docker | Present user with install options or `CONFIRM-SKIP` |
+| No resolution achieved | **❌ BLOCKED** — commit refused |
 
-### Security — Anti-Silent-Bypass Gate
+**Docker fallback commands**:
+- gitleaks: `docker run --rm -v "$(pwd)":/src zricethezav/gitleaks detect --source /src --no-git`
+- semgrep: `docker run --rm -v "$(pwd)":/src returntocorp/semgrep semgrep scan --config=auto --error`
 
-**security.gate.md** gains **Layer 0: Tool Availability Pre-check** that runs before any scan. When all three layers (gitleaks, semgrep, dependency audit) are unavailable:
+**commit.md** security scan restructured from advisory step to 3-step mandatory hard gate:
+1. Tool Availability Check (Layer 0)
+2. Execute Available Scans (run whichever layers are actually executable)
+3. Gate Decision (read Gate Status Determination table → act on result)
 
-1. Docker fallback is attempted
-2. If Docker is also unavailable, user is presented with install options or a `CONFIRM-SKIP` acknowledgment
-3. Without resolution → **commit is blocked**
+**diagnose.md** Section 5 adds **Security Gate Viability** row:
 
-**commit.md** security scan section is restructured into a 3-step mandatory flow (Tool Availability → Execute Available Scans → Gate Decision).
+| Condition | Status |
+|-----------|--------|
+| ≥1 native tool available | ✅ Gate functional |
+| Docker available as fallback | ⚠️ Reduced — Docker-based scanning |
+| No tools + no Docker | ❌ Gate non-functional — commits unprotected |
 
-**diagnose.md** Section 5 adds **Security Gate Viability** assessment — at a glance visibility into whether the security gate can actually protect commits.
+Tool table expanded: +Docker (fallback) row, +Commit-msg hook symlink check.
 
-### New Command — /aicam
+### .gitleaks.toml Fix
 
-An interactive workflow guide with 6 entry points:
-
-- Workflow overview (5-Phase diagram + typical scenarios)
-- Command reference (16 commands grouped by phase)
-- Per-phase navigation ("I'm at Phase X, what next?")
-- Skill reference (auto-trigger conditions, traps)
-- Gate reference (blocking conditions, exemptions)
-- Progressive enablement paths (L0-L3)
-
-Supports direct command lookup: `/aicam /execute`, `/aicam hotfix`, etc.
-
-### Documentation
-
-- New principle #19: Security scanning must not be silently skipped
-- WORKFLOW.md, README.md, README.en.md, README.zh.md all synced to v1.3.3
-- Command count: 15 → 16
+Removed unsupported top-level `title` key that caused gitleaks 8.x to fail config parsing (`toml: expected character =`). Replaced with comment to preserve the label.
 
 ---
 
-## Files Changed
+## 🚀 New Command
 
-| File | Action | Description |
-|------|--------|-------------|
-| `.claude/gates/security.gate.md` | Modified | +Layer 0 tool availability pre-check + Docker fallback + resolution protocol |
-| `.claude/commands/commit.md` | Modified | Security scan upgraded from advisory to 3-step mandatory hard gate |
-| `.claude/commands/diagnose.md` | Modified | Section 5: +Security Gate Viability, +Docker status, English localization |
-| `.claude/commands/aicam.md` | **New** | Interactive workflow guide with 6 entry points + command reference table |
-| `.claude/WORKFLOW.md` | Modified | v1.3.3 header, version history, system composition (16 commands), principle #19 |
-| `README.md` | Modified | v1.3.3 header, command count, version history |
-| `README.en.md` | Modified | v1.3.3 header, version history, system composition, L0 path |
-| `README.zh.md` | Modified | v1.3.3 header, version history (Chinese), system composition, L0 path |
-| `.gitleaks.toml` | Fixed | Removed unsupported `title` key breaking gitleaks 8.x config parser |
+### `/aicam` — Interactive Workflow Guide
+
+In-app reference manual with 6 entry points, callable anytime without arguments for an interactive menu:
+
+| Option | Content |
+|--------|---------|
+| 1. Workflow Overview | 5-Phase ASCII diagram + typical scenarios + quick-jump paths |
+| 2. Command Reference | 16 commands grouped by Phase, one-line purpose each |
+| 3. Navigate by Phase | "I'm at Phase X, what next?" — guidance per phase with gate rules and next-step prompts |
+| 4. Skill Reference | 4 workspace skills + 4 superpowers skills, auto-trigger conditions, common traps |
+| 5. Gate Reference | 6 gates with blocking conditions, exemption rules, and tool coverage |
+| 6. Enablement Paths | L0-L3 with prerequisites, command sets, and guidance ("start with L1, upgrade anytime") |
+
+**Direct command lookup**: `/aicam /execute`, `/aicam hotfix` — shows description, arguments, phase, pre-conditions, trigger type, related skills/gates, artifacts, and typical usage.
+
+**16-command reference table** in the guide file provides phase association, trigger type, pre-condition, and next-step for every command in the system.
 
 ---
 
-## Upgrade Notes
+## 📝 Documentation
+
+### WORKFLOW.md
+- Version header updated to v1.3.3
+- Version history: +v1.3.3 entry (security anti-bypass + /aicam)
+- System components table: commands 15→16, `/aicam` added to command list
+- Progressive enablement L0: `/hotfix` → `/hotfix, /aicam`
+- Directory structure comment: 15→16 commands
+- New principle #19: **Security scanning must not be silently skipped**
+
+### README.md / README.en.md / README.zh.md
+- All three variants synced to v1.3.3
+- Version headers, history tables, system composition tables, L0 enablement paths updated
+- Command count: 15→16 across all three files
+
+### diagnose.md
+- Section 5: +Security Gate Viability assessment, +Docker availability check
+- Section 6.5: Chinese annotations translated to English
+- Output format: Security section expanded with viability + Docker status
+
+---
+
+## 📁 Files Changed
+
+| File | Action | Lines |
+|------|--------|-------|
+| `.claude/gates/security.gate.md` | Modified | +52 lines — Layer 0 pre-check + Docker fallback + resolution protocol |
+| `.claude/commands/commit.md` | Modified | +36 / −14 — 3-step mandatory security scan flow |
+| `.claude/commands/diagnose.md` | Modified | +20 / −14 — Security Gate Viability + English localization |
+| `.claude/commands/aicam.md` | **New** | 387 lines — Interactive workflow guide |
+| `.claude/WORKFLOW.md` | Modified | +10 / −8 — v1.3.3 sync + principle #19 |
+| `README.md` | Modified | +4 / −2 — v1.3.3 sync |
+| `README.en.md` | Modified | +16 / −2 — v1.3.3 sync |
+| `README.zh.md` | Modified | +16 / −2 — v1.3.3 sync |
+| `RELEASE-v1.3.3.md` | **New** | This file |
+| `.gitleaks.toml` | Fixed | 1 line — removed unsupported `title` key |
+
+---
+
+## 📊 Commit History (since v1.3.2)
+
+| Commit | Message |
+|--------|---------|
+| `d8025ad` | feat(workflow): update to v1.3.3 — security gate anti-silent-bypass + /aicam interactive guide |
+| `81239af` | docs: add AICAM maturity assessment v1.3.2 |
+| `6fe78a6` | fix: remove unsupported 'title' key from .gitleaks.toml |
+| `c0dd6b7` | docs: release v1.3.3 — update README and create release notes |
+
+---
+
+## ⬆️ Upgrade from v1.3.2
 
 ```bash
-# To upgrade from v1.3.2:
-# 1. Copy the changed .claude/ files
+# Copy changed files to your project
 cp .claude/gates/security.gate.md /path/to/project/.claude/gates/
 cp .claude/commands/commit.md /path/to/project/.claude/commands/
 cp .claude/commands/diagnose.md /path/to/project/.claude/commands/
 cp .claude/commands/aicam.md /path/to/project/.claude/commands/
 cp .claude/WORKFLOW.md /path/to/project/.claude/
 
-# 2. Update README files if you maintain them
-# 3. Verify: run /diagnose
-# 4. Install at least one security tool if not present:
+# Install at least one security tool (recommended):
 brew install gitleaks
+
+# Verify:
+/diagnose
 ```
 
 No breaking changes. All existing commands and gates continue to work as before.
