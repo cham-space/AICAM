@@ -28,53 +28,20 @@ Cross-check Spec-Lite AC list against plan Tasks:
 
 ### Destructive Operation Gate
 
-Before executing ANY task, scan all commands and SQL in that task.
-If any of the following patterns are detected, **STOP immediately** and present to the user before proceeding:
-
-| High-Risk Operation | Example |
-|---------|------|
-| `TRUNCATE TABLE` | Wipes entire table, irreversible |
-| `DROP TABLE` / `DROP DATABASE` | Deletes table/database structure and data |
-| `DROP COLUMN` / `ALTER TABLE ... DROP` | Drops column, data loss |
-| `DELETE` without WHERE | Deletes all rows in table |
-| Column type change (may truncate data) | `ALTER TABLE ... MODIFY COLUMN` |
-| `rm -rf` / batch file deletion | Irreversible file deletion |
-
-**On detection, show the user:**
-```
-⚠ High-risk operation detected: `{command}`
-Operation type: {TRUNCATE / DROP / unconditional DELETE, etc.}
-Impact: {table/file path} — {estimated row count or description}
-Is a backup in place? Please reply "confirm" to proceed, or explain why to skip.
-```
-
-**No auto-advance**: Must wait for explicit user confirmation before proceeding.
+Execute gate from `.claude/gates/destructive-op.gate.md`:
+- Scan all commands and SQL before executing any task
+- On detection → STOP and present impact to user
+- Wait for explicit "confirm" — no auto-advance
 
 ---
 
 ### TDD Gate (Node 2-A)
 
-Before implementing each task:
-1. Write the failing test first (unit or integration, as appropriate)
-2. Confirm the test fails for the **right reason** (feature missing — not a typo, not testing existing behavior)
-3. Implement **minimal** code until the test passes — do not add features beyond what the test requires
-4. **REFACTOR**: After green, clean up duplication/names/helpers while keeping all tests green — do not add new behavior in this phase
-
-**Iron Law**: If you discover implementation code was written before the test → **delete it**. Do not keep it as "reference". Start over from a failing test.  
-**Applies to bug fixes too**: Before fixing any bug, you must first write a failing test that reproduces it.
-
-**TDD Exemption Request (mandatory pause)**: The following cases may request an exemption, but the Agent must NOT decide on its own — must pause and present to the user:
-
-```
-⚠️ TDD Exemption Request — Task {N}: {task-name}
-Reason: {reason}
-Exemption type: config change / migration script / pure style / annotation update / dependency upgrade / other: {detail}
-Confirm to proceed? (y/n):
-```
-
-User replies `n` → must re-execute using TDD flow.
-
-**Exemptible cases**: config file changes, database migration scripts, pure style/CSS changes, annotation/doc comment updates, dependency version upgrades (no business logic changes).
+Execute gate from `.claude/gates/tdd.gate.md`:
+- Red (failing test) → Green (minimal code) → Refactor
+- Non-exemptible types: IPC/REST/events, conditional UI, serialization, error handling
+- Exemption requires user approval with reason
+- Iron Law: code written before test → delete and restart
 
 ### 2. Execute Tasks in Order
 
@@ -148,40 +115,26 @@ If any command fails:
 
 ### 5. Smoke Test（Mandatory Gate — cannot skip）
 
-After all validation commands pass:
+Execute gate from `.claude/gates/smoke.gate.md`:
 
 **5a. Read the checklist**
 
-Read `## Smoke Test Checklist` from the plan file.
-- If the section is missing → **STOP**: `"⚠ Plan is missing ## Smoke Test Checklist. Add the checklist to the plan, or get explicit user confirmation to skip."`
+Read `## Smoke Test Checklist` from the plan file. Missing → STOP.
 
 **5b. Start the application**
 
-Start the application/service using the startup command from the plan (or infer from project type).
-Verify it starts without crash. If startup fails → enter bug fix flow, then re-run Smoke Test.
+Start app/service; verify no crash. Crash → bug fix → re-run Smoke Test.
 
 **5c. Execute each checklist item**
 
-| Action | Expected | Result |
-|--------|----------|--------|
-| {item from checklist} | {expected behavior} | ✅ PASS / ❌ FAIL |
-
-Any ❌ → enter bug fix flow; re-run the **full** Smoke Test after each fix.
+Record each item as ✅ PASS / ❌ FAIL.
+Any ❌ → bug fix → re-run **entire** Smoke Test.
 
 **5d. Write the log**
 
-All items ✅ → append `## Smoke Test Log` to `.agents/plans/{phase-name}.summary.md`:
+All ✅ → append `## Smoke Test Log` to `.agents/plans/{phase-name}.summary.md`.
 
-```markdown
-## Smoke Test Log
-
-**Date**: {date}
-**All items passed**: ✅
-
-| Action | Expected | Result |
-|--------|----------|--------|
-| {item} | {expected behavior} | ✅ PASS |
-```
+**Runtime health checks**: verify app process alive, core endpoint responds, no ERROR logs during startup.
 
 **Hard gate**: `## Smoke Test Log` missing, or any ❌/⏸️ entry = Phase cannot proceed to `/verify-phase`.
 

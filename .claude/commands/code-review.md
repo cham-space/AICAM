@@ -62,17 +62,24 @@ Extract file lists from the plan file under these headings (in order of priority
 This is the **primary scope**. Only files declared in the plan are subject to full review.
 
 **Layer 2 — Git working tree delta (supplements Layer 1)**  
+
+First, identify the Phase starting point:
 ```bash
-# Uncommitted changes (staged + unstaged) — covers /execute not yet committed
+# Find recent commits to establish review baseline
+git log --oneline -20
+```
+
+Then compute the diff:
+```bash
+# Options (use whichever gives the cleanest Phase boundary):
+git diff --name-only HEAD~1 HEAD    # Last commit
+git diff --name-only HEAD~3 HEAD    # Last 3 commits (if Phase spans multiple)
+# Or: uncommitted changes (staged + unstaged)
 git diff --name-only HEAD
 git diff --name-only --cached
-
-# Also check committed delta since last phase (if commits exist)
-BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null)
-if [ $? -eq 0 ]; then
-  git diff --name-only $BASE_SHA HEAD
-fi
 ```
+
+**Diff Scope Constraint (v1.3.0)**: Only review files that appear in this git diff. Do NOT comment on pre-existing code that was not touched in this Phase — it blurs the review focus and wastes review budget.
 
 Cross-reference with Layer 1: files appearing in **both** plan scope and git delta are the confirmed review targets.  
 Files in git delta but NOT in plan → flag as **scope deviation** (not reviewed in detail, just noted).

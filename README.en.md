@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.2.1 | 2026-04-24
+> Version: v1.3.2 | 2026-04-25
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -12,7 +12,10 @@
 | v1.0.0 | 2026-04-19 | Initial release: 5-Phase workflow + 12 commands + 5 skills + Mermaid visualization |
 | v1.1.0 | 2026-04-21 | Added Smoke Test gate, tightened TDD exemption scope, ⏸️ hard-fail rule, TEST_DASHBOARD tracking, skills list correction (frontend-design replaces skill-creator) |
 | v1.2.0 | 2026-04-23 | Added Simplicity First / Surgical Changes / explicit Skill activation rules; removed ui-ux-pro-max (missing core scripts); workspace skills trimmed to 4; reference index internationalized |
-| v1.2.1 | 2026-04-24 | **Commands**: new `/hotfix` (skip planning, direct fix flow), command count 12→13; **Gates**: `/execute` adds mandatory Smoke Test gate + AC↔Task mapping check; **Planning**: `/plan-feature` adds critical warning for >500KB workspace; **Archival**: flatten archive structure (`Phase{N}/` subdirs → flat files), `/close-phase` + `/verify-phase` add automatic Phase number derivation; **MCP**: add serena + typescript-lsp installation & configuration guide; **Misc**: e2e-test SKILL remaining Chinese translated to English, `.serena/` added to `.gitignore` |
+| v1.2.1 | 2026-04-24 | **Commands**: new `/hotfix` (skip planning, direct fix flow), command count 12→13; **Gates**: `/execute` adds mandatory Smoke Test gate + AC↔Task mapping check; **Planning**: `/plan-feature` adds critical warning for >500KB workspace; **Archival**: flatten archive structure, `/close-phase` + `/verify-phase` add automatic Phase number derivation; **MCP**: add serena + typescript-lsp installation & configuration guide; **Misc**: e2e-test SKILL remaining Chinese translated to English, `.serena/` added to `.gitignore` |
+| **v1.3.0** | **2026-04-25** | **Architecture**: new Gate Adapter Layer (`.claude/gates/` 6 gate files) decouples gate definitions from command scripts; **Security**: integrated gitleaks (Secrets) + semgrep (SAST) + dependency audit (SCA) + pre-commit hook + CI pipeline template; **Commands**: new `/diagnose` (health check) + `/onboard` (interactive setup), command count 13→15; **Skills**: agent-browser merged into e2e-test + new `backend-test`, frontend/backend skills 2:2 balanced; **Metrics**: M1-M5 five-dimensional metrics + TEST_DASHBOARD upgraded with auto-calculation + trend alerts; **Process**: `/discover` Path A 3-question gate + `/code-review` diff scope constraint + `/hotfix` regression scope declaration + plan-template Risk Register + Test Data Strategy; **Docs**: CLAUDE-template added security scanning guidance section |
+| **v1.3.1** | **2026-04-25** | **CI**: refactored to eco-adaptive pipeline (preflight outputs ecosystem+project_type driving conditional steps) + new oasdiff Breaking Change detection step + Smoke Test filled with actual commands; **Gates**: contract.gate added oasdiff tool + spec archival protocol, coverage.gate fixed corrupted heading + added 5-ecosystem tool table; **Metrics**: M1 switched to git log auto-calculation + cross-platform fallback (macOS stat / Linux date -r); **Resilience**: /diagnose added gate execution completeness check (anti-truncation) + /verify-phase added TDD/Smoke entry count vs gate comparison (anti-bypass) + CLAUDE-template added Known Issues persistent section + /close-phase auto-extracts unresolved issues; **Engineering**: commit-msg hook enforces Conventional Commits + plan-feature sub-agent fault tolerance + commit.md security scan step + prime.md / WORKFLOW.md §11-A doc sync |
+| **v1.3.2** | **2026-04-25** | **Bug fixes**: Python rest-api smoke fallback logic fixed (`[ -n "$SERVER_PID" ]` dead code → `python -c "import uvicorn"` availability check, Flask/Django projects now correctly fallback to `python app.py`); /diagnose Section 5 security tools table added commit-msg hook check row (symlink install status now visible); **Quality**: 5th independent assessment confirms issue density convergence (P0/P1 cleared, 3 new findings all P1/P2 level) |
 
 ---
 
@@ -36,10 +39,11 @@
 
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
-| **Commands** | `.claude/commands/` | 13 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix` |
-| **Skills** | `.claude/skills/` | 4 | `agent-browser`, `api-contract-first`, `e2e-test`, `frontend-design` |
+| **Commands** | `.claude/commands/` | 15 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix`, `/diagnose`, `/onboard` |
+| **Skills** | `.claude/skills/` | 4 | `frontend-design`, `api-contract-first`, `e2e-test` (merged agent-browser), `backend-test` |
+| **Gates** | `.claude/gates/` | 6 | `tdd.gate.md`, `smoke.gate.md`, `security.gate.md`, `contract.gate.md`, `destructive-op.gate.md`, `coverage.gate.md` |
 | **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
-| **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization (includes Simplicity First / Surgical Changes rules + Skill activation rules + test command categories) |
+| **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization (includes Simplicity First / Surgical Changes rules + Skill activation rules + security scanning guidance + test command categories) |
 | **Plans & Specs** | `.agents/` | 2 subdirectories | `plans/` stores implementation plans, `specs/` stores lightweight specs |
 
 ### Usage
@@ -48,6 +52,7 @@
 2. **Existing Project**: Copy to an existing project, skip Phase 0, start directly from `/plan-feature`.
 3. **Iteration**: Each feature independently completes all 5 phases before archiving; CLAUDE.md stays lean and maintainable.
 4. **Emergency Fix**: When a clearly scoped production bug appears, use `/hotfix` to skip Phase 1 planning and jump directly to the TDD fix flow (Smoke Test + Code Review gates still apply).
+5. **First-time setup**: Run `/onboard` for interactive guided configuration (recommended).
 
 ### CLAUDE-template.md Key Features
 
@@ -65,6 +70,35 @@
 - **Not a scaffolding tool**: It does not generate project boilerplate code. Instead, it defines process rules for "how AI should think and collaborate."
 - **Not a template library**: Every command is a living process script with gates, validations, and automatic trigger conditions.
 - **Progressive, not bulk**: Strictly limits context loading, maintaining context health in long-term projects through an archival mechanism.
+
+### Progressive Enablement Path (v1.3.0)
+
+Choose your level to avoid one-time cognitive overload:
+
+```
+L0 — Zero Config (< 5 min)
+     For: emergency fixes, single-file changes
+     Command: /hotfix
+     Dependencies: none
+
+L1 — Minimal (< 15 min)
+     For: MVP, prototypes, < 1 week projects
+     Commands: /plan-feature → /execute → /commit
+     Dependencies: CLAUDE.md (default template rules)
+     Skip: Phase 0-C, 0-D
+
+L2 — Standard (< 1 hr) ← recommended
+     For: production projects, ongoing iteration
+     Commands: full 5 Phase + 4 Skill + 6 Gate
+     Dependencies: full CLAUDE.md + PRD.md + reference docs
+
+L3 — Advanced (< 2 hr)
+     For: team collaboration, production
+     Commands: L2 + CI/CD + security scanning + MCP
+     Dependencies: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp
+```
+
+> First-time users: run `/onboard` for interactive guided setup.
 
 ---
 

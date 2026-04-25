@@ -130,13 +130,16 @@ For detailed component specs, see `docs/specs/*-design.md`.
 |-------|------|-------------|
 | Frontend Component Guidelines | `.claude/reference/components.md` | When building or modifying React components |
 | API Endpoint Guidelines | `.claude/reference/api.md` | When defining or calling Tauri IPC commands / external APIs |
+| Test Coverage Thresholds | `.claude/gates/coverage.gate.md` | Before running `/verify-phase` |
+| Security Scan Config | `.claude/gates/security.gate.md` | When setting up CI or debugging scan failures |
 
 **Hard isolation rule**: Do NOT read these reference files unless the current task explicitly requires them. They exist for on-demand lookup only.
 
 **Skill Activation Rules** (enforced — do not rely on auto-match):
 - Building or modifying frontend components/pages → explicitly load `frontend-design`
 - API definition or frontend-backend field mapping → explicitly load `api-contract-first`
-- Business workflow testing (E2E) → explicitly load `e2e-test`
+- Business workflow testing (E2E / API flow) → explicitly load `e2e-test`
+- Backend unit/integration/DB testing → explicitly load `backend-test`
 
 ---
 
@@ -147,6 +150,15 @@ For detailed component specs, see `docs/specs/*-design.md`.
 ### Secrets & Credentials
 - Never commit files that may contain secrets: `.env*`, `*.key`, `*.pem`, `*.secret`, credential or token files
 - When in doubt, check `.gitignore` and ask the user before staging unfamiliar files
+- Pre-commit hook runs `gitleaks` — high-confidence secret detection blocks the commit
+- fluffy CI runs full SAST (`semgrep`) + SCA (`npm/cargo/pip audit`) — Critical/High findings block merge
+
+### Security Scanning (Automated — v1.3.0+)
+- **Local (pre-commit)**: gitleaks secrets detection + Spec-Lite existence check
+- **CI (PR/push)**: semgrep SAST + dependency audit + unit tests + Smoke Test
+- **Gate definitions**: `.claude/gates/security.gate.md` (read when configuring CI)
+- **Config files**: `.gitleaks.toml` (secrets patterns), `.github/workflows/aicam-gates.yml` (CI pipeline)
+- If you suspect a false positive, flag it — don't silence the tool without review
 
 ### Git Operations
 - Confirm with the user before `git push`
@@ -163,6 +175,23 @@ For detailed component specs, see `docs/specs/*-design.md`.
 
 ### Override
 - Any rule above can be skipped if the user explicitly requests it — but the risk should always be stated first
+
+---
+
+## Known Issues & Deferred Risks
+
+> Persistent across phases — NOT compressed by /close-phase.
+> Review before each new /plan-feature. Entries reference archive/ for full details.
+> This table is excluded from the 150-line CLAUDE.md limit.
+
+| ID | Description | Source Phase | Archive Ref | Status |
+|----|-------------|-------------|-------------|--------|
+| — | {No known issues yet} | — | — | — |
+
+**Maintenance rules**:
+- `/close-phase` auto-appends new entries from summary.md "Unresolved Issues" section
+- Each `/close-phase` prompts the user to clean up resolved entries (but never auto-deletes)
+- Entries marked 🟢 Resolved are retained for one extra Phase, then removed on next close
 
 ---
 

@@ -188,13 +188,32 @@ Use information-dense keywords for clarity:
 - [ ] {Core feature B}: {steps} → {expected result}
 - [ ] Restart/second launch works, data retained
 
-## Mock Strategy
+## Test Data Strategy（v1.3.0: replaces Mock Strategy）
 
-<!-- Required. Explain how business workflow tests avoid relying on real external services. -->
+<!-- Required. Explain how tests manage data: fixture factories, transaction rollback, in-memory DB, etc. -->
 
-| External Dependency | Mock Strategy | Tool/Library |
+| External Dependency | Strategy | Tool/Library |
 |---------|---------|---------|
-| {External API / DB / Third-party service} | {Pre-set response fixture / in-memory DB / stub} | {tool name} |
+| {External API / DB / Third-party service} | {Pre-set response fixture / in-memory DB / transaction rollback / stub} | {tool name} |
+
+| Test Data Concern | Approach |
+|---------|---------|
+| Per-test isolation | {transaction rollback / per-test DB reset / in-memory DB} |
+| Core entity fixtures | {factory library + factory definition for key entities} |
+| Cleanup strategy | {automatic rollback / manual teardown / table truncation} |
+
+> For detailed patterns, see `.claude/skills/backend-test/SKILL.md`.
+
+## Risk Register（v1.3.0 — new）
+
+<!-- Required. Identify risks that could block or delay this Phase. -->
+
+| Risk ID | Risk Description | Probability | Impact | Mitigation |
+|---------|-----------------|-------------|--------|-----------|
+| R-1 | {what could go wrong} | Low/Med/High | Low/Med/High | {preventive action} |
+| R-2 | {what could go wrong} | Low/Med/High | Low/Med/High | {preventive action} |
+
+> Risks with High×High = P0 blocking; revisit in `/verify-phase` Step 5.
 
 ---
 

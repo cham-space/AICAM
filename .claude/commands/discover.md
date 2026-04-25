@@ -32,7 +32,20 @@ Present two paths:
 
 ## Path A: Streamlined (Requirements Clear)
 
-### Step 1: Sub-Agent Research
+### Step 1: Path A Clarity Gate (v1.3.0 — verify "requirements clear" claim)
+
+Before proceeding with Path A, verify the user's claim that requirements are clear. Ask these 3 questions:
+
+> **Path A Verification** (all 3 must be answered):
+> 1. **Core User Story**: "As a ___, I want to ___, so that ___" — is the core user story written down?
+> 2. **Technical Boundaries**: Is the tech stack / platform / integration dependencies confirmed?
+> 3. **MVP Scope**: Do you know what's in MVP scope and what's explicitly excluded?
+>
+> Any "no" or "not sure" → **automatically redirect to Path B**.
+
+Only proceed to Step 2 if all 3 are confirmed.
+
+### Step 2: Sub-Agent Research
 
 When dispatching 2+ research sub-agents, load `dispatching-parallel-agents`
 for prompt construction guidance. Each agent must receive: specific scope,
@@ -43,7 +56,7 @@ Launch parallel sub-agents for research:
 1. **Architecture Research Agent**: Research best practices for the target application type, recommended tech stack, common pitfalls, and reference implementations.
 2. **Domain Research Agent**: Research the specific domain (e.g., offline-first apps, multi-device sync, note-taking UX) for established patterns and proven solutions.
 
-### Step 2: Research Summary & Validation
+### Step 3: Research Summary & Validation
 
 Present findings to the user:
 
@@ -54,7 +67,7 @@ Present findings to the user:
 
 Ask the user to confirm or raise concerns.
 
-### Step 3: Gap Detection
+### Step 4: Gap Detection
 
 Even if requirements appear clear, scan for logical gaps using this framework:
 
@@ -67,7 +80,7 @@ Even if requirements appear clear, scan for logical gaps using this framework:
 
 If gaps are found, ask targeted questions. Fix them before proceeding.
 
-### Step 4: Enter Phase 0-B
+### Step 5: Enter Phase 0-B
 
 Proceed to `/create-prd` with the confirmed requirements and research findings.
 

@@ -1,0 +1,44 @@
+# Gitleaks config — secrets detection
+# See: https://github.com/gitleaks/gitleaks
+
+title: AICAM Gitleaks Config
+
+# Exclude generated/content directories
+[allowlist]
+  description = "Global allowlist"
+  paths = [
+    '''node_modules/''',
+    '''target/''',
+    '''__pycache__/''',
+    '''dist/''',
+    '''build/''',
+    '''.git/''',
+    '''archive/''',
+    '''.*\.lock''',
+    '''poetry\.lock''',
+    '''yarn\.lock''',
+    '''package-lock\.json''',
+    '''e2e-screenshots/''',
+    '''test-fixtures/''',
+  ]
+
+# Generic API key / token patterns — high confidence
+[[rules]]
+  id = "generic-api-key"
+  description = "Generic API key or token string"
+  regex = '''(?i)(secret|token|key|password|passwd|credential|auth)\s*[:=]\s*['"][A-Za-z0-9_\-\.]{16,}['"]'''
+  tags = ["key", "secret"]
+
+# Private key patterns
+[[rules]]
+  id = "private-key"
+  description = "Private key (RSA/DSA/EC/OpenSSH)"
+  regex = '''-----BEGIN\s+(RSA|DSA|EC|OPENSSH)\s+PRIVATE\s+KEY-----'''
+  tags = ["key", "secret"]
+
+# JWT tokens
+[[rules]]
+  id = "jwt-token"
+  description = "Hardcoded JWT token"
+  regex = '''eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}'''
+  tags = ["token"]

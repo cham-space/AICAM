@@ -121,6 +121,18 @@ Format the extracted information as a concise journal entry:
 
 **Size target**: Each Phase entry should be 15-30 lines. If it exceeds 40 lines, you're including too much detail.
 
+**Known Issues Extraction (v1.3.1)**:
+
+After generating the Migration Journal entry:
+1. Read this Phase's `summary.md` → find `## Unresolved Issues` section
+2. If non-empty, for each unresolved issue:
+   - Generate an ID: `ISSUE-{sequential 3-digit}`
+   - Append a row to CLAUDE.md `## Known Issues & Deferred Risks` table
+   - Include: ID, description, source Phase number, archive reference path, status `🔴 Open`
+3. 如果 CLAUDE.md 尚无 Known Issues 节 → 创建之（模板见 CLAUDE-template.md）
+4. **Known Issues 表不计入 CLAUDE.md 150 行限制**
+5. 提示用户: `"Known Issues 表现有 {N} 项，是否有需标记为 🟢 Resolved 的条目？"`（等待用户回复，不自动修改）
+
 ### Step 4: Present for User Review
 
 **Before making any changes**, display:
@@ -206,7 +218,7 @@ If no changes are detected, output:
 
 ---
 
-### Step 7.5: Update TEST_DASHBOARD.md
+### Step 7.5: Update TEST_DASHBOARD.md (v1.3.0: adds automatic M1-M5 metrics)
 
 After archiving, update `.agents/reports/TEST_DASHBOARD.md` (create if not exists):
 
@@ -214,9 +226,35 @@ After archiving, update `.agents/reports/TEST_DASHBOARD.md` (create if not exist
 2. Fill in this Phase's detailed block:
    - Gate summary (read from Verification Report Mandatory Gates table)
    - Unit test details (read from summary.md Test Cases)
-   - Smoke Test details (read from summary.md Smoke Test Log, including each action → expected → result)
-   - Business workflow test details (read from summary.md Business Workflow Tests, including Mock strategy)
-3. TEST_DASHBOARD.md is **NOT added to CLAUDE.md context loading** — for human reference only
+   - Smoke Test details (read from summary.md Smoke Test Log)
+   - Business workflow test details (read from summary.md Business Workflow Tests)
+3. **Calculate M1-M5 metrics** (v1.3.1: M1 uses git log for auto-computation):
+
+   - **M1 Phase周期**: Extract plan creation date from git log, archive date = today.
+     ```bash
+     # Auto-detect plan creation date from first git commit containing the plan file
+     PLAN_FILE=".agents/plans/{phase-name}.md"
+     PLAN_CREATED=$(git log --follow --format="%ad" --date=short -- "$PLAN_FILE" | tail -1)
+     # If no git history (new file), fall back to file system birth time (cross-platform)
+     if [ -z "$PLAN_CREATED" ]; then
+       PLAN_CREATED=$(stat -f "%SB" -t "%Y-%m-%d" "$PLAN_FILE" 2>/dev/null) ||
+       PLAN_CREATED=$(date -r "$PLAN_FILE" +%Y-%m-%d 2>/dev/null) ||
+       PLAN_CREATED="unknown"
+     fi
+     ARCHIVE_DATE=$(date +%Y-%m-%d)
+     # M1 = days between PLAN_CREATED and ARCHIVE_DATE
+     ```
+   - **M2 一次通过率**: `count phases with 0 rework / total phases` (rework = > 0 plan deviations or > 0 bugs found)
+   - **M3 测试密度**: `total_test_cases / total_acceptance_criteria` (from summary.md test table + verification report AC count)
+   - **M4 上下文效率**: `total_md_kb_before_archive / total_md_kb_after_archive` (from Step 9 context size output)
+   - **M5 门禁绕过率**: `gates_skipped / total_gates` (count ⏭ SKIP entries in Mandatory Gates table)
+4. Compare each metric against thresholds:
+   - M1 > 3 days → ⚠️ "Phase cycle exceeding 3-day target"
+   - M2 < 70% → ⚠️ "First-pass rate below 70% baseline"
+   - M3 < 1.5 → ⚠️ "Test density below 1.5 tests/AC"
+   - M4 < 1.3 → ⚠️ "Context compression efficiency below 1.3x"
+   - M5 > 0 → ⚠️ "Gates bypassed — investigate"
+5. TEST_DASHBOARD.md is **NOT added to CLAUDE.md context loading** — for human reference only
 
 ---
 

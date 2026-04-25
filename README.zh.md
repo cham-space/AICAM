@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.2.1 | 2026-04-24
+> 版本: v1.3.2 | 2026-04-25
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -12,7 +12,10 @@
 | v1.0.0 | 2026-04-19 | 初始版本：5 Phase 工作流 + 12 命令 + 5 技能 + Mermaid 可视化 |
 | v1.1.0 | 2026-04-21 | 新增 Smoke Test 门禁、TDD 不可豁免范围收紧、⏸️ 状态硬规则、TEST_DASHBOARD 跟踪、技能列表校准（frontend-design 替换 skill-creator） |
 | v1.2.0 | 2026-04-23 | 新增 Simplicity First / Surgical Changes / 显式 Skill 激活规则；删除 ui-ux-pro-max（缺失核心脚本）；工作区 Skill 精简为 4 个；参考文档索引国际化 |
-| v1.2.1 | 2026-04-24 | **命令**：新增 `/hotfix`（跳过规划直接修复）、命令总数 12→13；**门禁**：`/execute` 新增 Smoke Test 强制门禁 + AC↔Task 映射检查；**规划**：`/plan-feature` 新增 >500KB 工作区临界警告；**归档**：扁平化 archive 结构（`Phase{N}/` 子目录 → 扁平文件）、`/close-phase` + `/verify-phase` 新增 Phase 编号自动推导；**MCP**：新增 serena + typescript-lsp 安装配置指南；**其他**：e2e-test SKILL 残留中文英化、`.serena/` 加入 `.gitignore` |
+| v1.2.1 | 2026-04-24 | **命令**：新增 `/hotfix`（跳过规划直接修复）、命令总数 12→13；**门禁**：`/execute` 新增 Smoke Test 强制门禁 + AC↔Task 映射检查；**规划**：`/plan-feature` 新增 >500KB 工作区临界警告；**归档**：扁平化 archive 结构、`/close-phase` + `/verify-phase` 新增 Phase 编号自动推导；**MCP**：新增 serena + typescript-lsp 安装配置指南；**其他**：e2e-test SKILL 残留中文英化、`.serena/` 加入 `.gitignore` |
+| **v1.3.0** | **2026-04-25** | **架构**：新增门禁适配器层（`.claude/gates/` 6个Gate文件）解耦门禁定义与命令脚本；**安全**：集成 gitleaks(Secrets) + semgrep(SAST) + 依赖审计(SCA) + pre-commit hook + CI pipeline模板；**命令**：新增 `/diagnose`(健康诊断) + `/onboard`(交互引导)、命令总数 13→15；**Skills**：agent-browser 合并至 e2e-test + 新增 `backend-test`(后端测试执行)、前后端Skill 2:2均衡；**度量**：M1-M5五维指标 + TEST_DASHBOARD升级为自动计算+趋势预警；**流程**：`/discover` Path A 3问门控 + `/code-review` Diff 范围约束 + `/hotfix` 回归范围声明 + plan-template Risk Register + Test Data Strategy；**文档**：CLAUDE-template 增加安全扫描指引章节 |
+| **v1.3.1** | **2026-04-25** | **CI**：重构为生态自适应流水线（preflight 输出 ecosystem+project_type 驱动条件步骤）+ 新增 oasdiff Breaking Change 检测 step + Smoke Test 充实实际命令；**门禁**：contract.gate 新增 oasdiff 工具 + spec 归档协议、coverage.gate 修复损坏标题 + 新增 5 生态工具表；**度量**：M1 改用 git log 自动计算 + 跨平台 fallback（macOS stat / Linux date -r）；**韧性**：/diagnose 新增门禁执行完整度校验（anti-truncation）+ /verify-phase 新增 TDD/Smoke 条目数对比门禁（anti-bypass）+ CLAUDE-template 新增 Known Issues 持久节 + /close-phase 自动提取未解决问题；**工程**：commit-msg hook 强制 Conventional Commits + plan-feature 子代理容错规则 + commit.md 安全扫描步骤 + prime.md / WORKFLOW.md §11-A 文档同步 |
+| **v1.3.2** | **2026-04-25** | **Bug 修复**：Python rest-api smoke fallback 逻辑修复（`[ -n "$SERVER_PID" ]` 死代码 → `python -c "import uvicorn"` 可用性检测，Flask/Django 项目现可正确 fallback 到 `python app.py`）；/diagnose Section 5 安全工具表新增 commit-msg hook 检查行（symlink 安装状态可见）；**质量**：第五轮独立评估确认问题密度持续收敛（P0/P1 清零，3 项新发现均在 P1/P2 级） |
 
 ---
 
@@ -36,10 +39,11 @@
 
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
-| **组件（Commands）** | `.claude/commands/` | 13 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix` |
-| **技能（Skills）** | `.claude/skills/` | 4 个 | `agent-browser`、`api-contract-first`、`e2e-test`、`frontend-design` |
+| **组件（Commands）** | `.claude/commands/` | 15 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix`、`/diagnose`、`/onboard` |
+| **技能（Skills）** | `.claude/skills/` | 4 个 | `frontend-design`、`api-contract-first`、`e2e-test`(合并agent-browser)、`backend-test` |
+| **门禁（Gates）** | `.claude/gates/` | 6 个 | `tdd.gate.md`、`smoke.gate.md`、`security.gate.md`、`contract.gate.md`、`destructive-op.gate.md`、`coverage.gate.md` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
-| **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 测试命令分类） |
+| **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 安全扫描指引 + 测试命令分类） |
 | **计划与规格** | `.agents/` | 2 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格 |
 
 ### 使用方式
@@ -48,6 +52,7 @@
 2. **已有项目**：复制到已有项目后，跳过 Phase 0，直接从 `/plan-feature` 开始
 3. **迭代**：每个新功能独立走完 5 个 Phase 后归档，CLAUDE.md 保持精简可维护
 4. **紧急修复**：生产环境出现明确范围的 Bug 时，使用 `/hotfix` 跳过 Phase 1 规划，直接进入 TDD 修复流程（Smoke Test + Code Review 门禁仍适用）
+5. **首次配置**：推荐运行 `/onboard` 进行交互式引导配置
 
 ### CLAUDE-template.md 核心特性
 
@@ -65,6 +70,35 @@
 - **不是脚手架**：不生成项目骨架代码，而是定义"AI 如何思考和协作"的过程规范
 - **不是模板库**：每个命令都是活的流程脚本，包含门禁、校验、自动触发条件
 - **渐进而非全量**：严格限制上下文加载量，通过归档机制保持长期项目的上下文健康
+
+### 渐进式启用路径（v1.3.0）
+
+按需选择启用级别，避免一次性认知负担：
+
+```
+L0 — 零配置即用（< 5 分钟）
+    适用: 紧急修复、单个文件改动
+    命令: /hotfix
+    依赖: 无
+
+L1 — 最小配置（< 15 分钟）
+    适用: MVP、原型、< 1 周小项目
+    命令: /plan-feature → /execute → /commit
+    依赖: CLAUDE.md（默认模板规则）
+    跳过: Phase 0-C, 0-D
+
+L2 — 标准配置（< 1 小时）← 推荐
+    适用: 正式项目、持续迭代
+    命令: 完整 5 Phase + 4 Skill + 6 Gate
+    依赖: 完整 CLAUDE.md + PRD.md + reference docs
+
+L3 — 高级配置（< 2 小时）
+    适用: 团队协作、生产环境
+    命令: L2 + CI/CD + 安全扫描 + MCP
+    依赖: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp
+```
+
+> 首次使用推荐运行 `/onboard` 进行交互式引导配置。
 
 ---
 

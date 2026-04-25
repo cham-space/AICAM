@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# AICAM Commit Message Hook — v1.3.0
+#
+# Installed via: ln -sf ../../.githooks/commit-msg .git/hooks/commit-msg
+#
+# Enforces Conventional Commits format using commitlint (.commitlintrc.yaml).
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+COMMIT_MSG_FILE="$1"
+
+echo -e "${GREEN}── AICAM Commit Message Check ──${NC}"
+
+if command -v npx &> /dev/null; then
+  if npx --no -- commitlint --edit "$COMMIT_MSG_FILE" 2>/dev/null; then
+    echo -e "${GREEN}✅ Commit message follows Conventional Commits${NC}"
+  else
+    echo -e "${RED}❌ Commit message does not follow Conventional Commits format${NC}"
+    echo ""
+    echo "  Required format: <type>(<scope>): <summary>"
+    echo "  Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert, hotfix"
+    echo "  See .commitlintrc.yaml for full config."
+    exit 1
+  fi
+else
+  echo "  ⏭  npx not available — skipping commitlint check"
+fi

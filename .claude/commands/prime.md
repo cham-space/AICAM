@@ -77,11 +77,14 @@ Provide a concise summary:
 
 ### Available Automation Skills
 - `api-contract-first`: API contract consistency validation (auto-triggers when API is involved)
-- `e2e-test`: End-to-end business feature testing (auto-executes when frontend is present)
+- `e2e-test`: End-to-end business feature testing — includes merged agent-browser capabilities (auto-executes when frontend is present; redirects to backend-test for non-web types)
+- `backend-test`: Backend test execution — unit/integration/DB tests with per-language templates (auto-triggers for backend-only work)
 - `frontend-design`: Frontend UI design intelligence (auto-loads when frontend UI is involved)
-- `test-driven-development`: TDD enforcement gate (auto-loads for every Task in Phase 2)
-- `systematic-debugging`: Systematic debugging (loads on bug/test failure)
-- `requesting-code-review`: Independent Code Review (recommended in Phase 3)
+
+### Key Commands
+- `/diagnose` — Health check: CLAUDE.md, artifacts, gates, security tools, skills, metrics
+- `/onboard` — Interactive setup guide with L0-L3 progressive path selection
+- `/plan-feature` → `/execute` → `/code-review` → `/verify-phase` → `/close-phase` → `/commit`
 
 ### Current State
 - Active branch

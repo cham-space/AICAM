@@ -1,10 +1,13 @@
 ---
 name: e2e-test
-description: Comprehensive end-to-end testing command. Launches parallel sub-agents to research the codebase (structure, database schema, potential bugs), then uses the Vercel Agent Browser CLI to test every user journey — taking screenshots, validating UI/UX, and querying the database to verify records. Run after implementation to validate everything before code review.
+description: End-to-end testing skill (includes merged agent-browser capabilities). For web/SPA projects: launches parallel sub-agents to research codebase, then uses Playwright (preferred) or agent-browser CLI to test every user journey. For non-web types: redirects to corresponding test strategy or backend-test skill. Run after /execute to validate before code review.
 disable-model-invocation: true
 ---
 
 # End-to-End Application Testing
+
+> v1.3.0: agent-browser Skill merged into this skill. Use `e2e-test` for all browser automation needs.
+> For backend-only testing (REST API / DB / unit tests), use `backend-test` skill.
 
 ## Pre-flight Check
 

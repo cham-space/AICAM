@@ -133,6 +133,19 @@ Additionally enforce gate outcomes:
 - Business Workflow Tests status is ⏸️ → must provide an executable automated script (using mock/fixture), or user must explicitly confirm in writing: "Business workflow verification for this Phase is deferred to the next Phase" — note this as a risk in the report
 - Smoke Test Log missing or contains ⏸️ entries → Smoke Test Gate status is ❌, blocking Phase close
 
+**Gate Evidence Completeness (v1.3.1 — anti-truncation + anti-bypass)**:
+
+Compare the plan's declared scope against summary.md evidence:
+
+1. **TDD Log**: Count non-exempt tasks in plan → count TDD Log entries in summary.md
+   - Entry count < non-exempt task count → **BLOCK**: `❌ TDD gate evidence incomplete ({logged}/{total} tasks logged)`
+2. **Smoke Test Log**: Count Smoke Test Checklist items in plan → count Smoke Test Log entries in summary.md
+   - Entry count < checklist item count → **BLOCK**: `❌ Smoke gate evidence incomplete ({logged}/{total} checklist items)`
+3. **Cross-reference**: Verify each TDD Log entry has Red→Green→Refactor record
+   - Missing Red/Green fields → flag as `⚠ Incomplete TDD record for Task {N}`
+
+> These checks run in a **new conversation** (context-isolated), ensuring objective assessment of Phase 2 execution evidence. A missing log entry here means the gate was either silently skipped or truncated — both are treated as ❌.
+
 ---
 
 ### Step 6: Bug Catalogue

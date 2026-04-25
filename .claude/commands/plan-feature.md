@@ -81,6 +81,12 @@ When dispatching 2+ research sub-agents, load `dispatching-parallel-agents`
 for prompt construction guidance. Each agent must receive: specific scope,
 clear goal, constraints, and expected output format.
 
+**Fault tolerance rules for parallel sub-agents:**
+- **Timeout**: Each sub-agent has a 5-minute timeout. If exceeded, mark the research area as `⚠ UNKNOWN — manual investigation needed`, do not block the plan.
+- **Empty result**: If a sub-agent returns no findings, treat as neutral (not an error). Mark the research area as `∅ No findings`.
+- **Offline degradation**: If external research (Stage 3) fails due to network issues, skip external references and proceed with codebase-only analysis. Note the degradation in the plan's `## NOTES` section.
+- **Partial results**: A failed or timed-out sub-agent does not block the overall plan. Consolidate available results and flag missing areas for manual follow-up.
+
 **1. Project Structure Analysis**
 
 - Detect primary language(s), frameworks, and runtime versions

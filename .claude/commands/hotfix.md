@@ -60,23 +60,17 @@ Generate a minimal plan directly in the summary:
 
 ### Step 2: Reproduce and Root Cause
 
-1. Write a failing test that **reproduces the bug**:
-   - Unit test if the bug is in isolated logic
-   - Integration test if it requires multiple components
-2. Confirm the test fails for the right reason (bug present — not a test typo)
-3. Read the failing code to identify root cause
-
-**Iron Law**: Do not write any fix code before the reproducing test is red.
+Execute gate from `.claude/gates/tdd.gate.md`:
+1. Write failing test that reproduces the bug → confirm red
+2. Identify root cause
+**Iron Law**: No fix code before reproducing test is red.
 
 ---
 
 ### Step 3: Destructive Operation Gate
 
-Same as `/execute`. Before ANY command, scan for:
-
-| High-Risk Operation | Action |
-|---------|------|
-| `DROP`, `TRUNCATE`, `DELETE` without WHERE, `rm -rf` | STOP, present to user, wait for "confirm" |
+Execute gate from `.claude/gates/destructive-op.gate.md`:
+Scan all commands; on detection → STOP and present to user.
 
 ---
 
@@ -99,7 +93,15 @@ Record TDD log in the summary:
 
 ### Step 5: Run Validation
 
-Run all existing tests to verify no regressions:
+Run full regression test suite to verify no regressions:
+
+## Regression Scope（必填 — v1.3.0）
+
+Before running tests, declare the regression scope in the summary file:
+- **测试范围**: {明确列出测试文件或模块名称}
+- **受影响模块的覆盖率基线**: {X}%（修复后不得低于此值）
+- **明确排除范围**: {哪些模块不需要回归，理由}
+
 ```bash
 # Run full test suite — no targeted-only testing for hotfixes
 {unit-test-command}
@@ -112,15 +114,10 @@ If any existing test breaks → fix the regression before proceeding. Max 3 atte
 
 ### Step 6: Smoke Test (Mandatory Gate)
 
-Execute the `## Smoke Test Checklist` from the summary file:
+Execute gate from `.claude/gates/smoke.gate.md` using `## Smoke Test Checklist` from the hotfix summary file.
 
-| Action | Expected | Result |
-|--------|----------|--------|
-| {checklist item} | {expected behavior} | ✅ PASS / ❌ FAIL |
-
-Any ❌ → fix and re-run full Smoke Test.
-
-All ✅ → write `## Smoke Test Log` table to the summary file.
+Record each item as ✅ PASS / ❌ FAIL. Any ❌ → fix and re-run full Smoke Test.
+All ✅ → write `## Smoke Test Log` to summary file.
 
 **Hard gate**: Smoke Test Log missing or any ❌/⏸️ = cannot proceed to Code Review.
 

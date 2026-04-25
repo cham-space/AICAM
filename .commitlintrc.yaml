@@ -1,0 +1,18 @@
+# Conventional Commits config for commitlint
+# See: https://commitlint.js.org
+
+extends: ["@commitlint/config-conventional"]
+
+rules:
+  type-enum:
+    - 2
+    - always
+    - [feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert, hotfix]
+  subject-case:
+    - 2
+    - never
+    - [sentence-case, start-case, pascal-case, upper-case]
+  body-max-line-length:
+    - 1
+    - always
+    - 100

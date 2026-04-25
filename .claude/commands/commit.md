@@ -19,6 +19,13 @@ Check that no unintended files are staged:
 - Exclude `.env`, secrets, or local-only config files
 - Verify `.gitignore` covers generated/temp files
 
+**Security scan** — execute gate from `.claude/gates/security.gate.md`:
+1. Run gitleaks detect on staged changes
+2. If semgrep is configured, run semgrep scan
+3. If a dependency audit script is defined, run it
+
+If any security gate blocks → fix before proceeding to commit.
+
 If tests exist, confirm they pass before proceeding:
 ```bash
 # Run whatever test command is defined in CLAUDE.md Commands section
