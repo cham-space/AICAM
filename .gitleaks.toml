@@ -1,7 +1,7 @@
 # Gitleaks config — secrets detection
 # See: https://github.com/gitleaks/gitleaks
 
-title: AICAM Gitleaks Config
+# title: AICAM Gitleaks Config
 
 # Exclude generated/content directories
 [allowlist]
