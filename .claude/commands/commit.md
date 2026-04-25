@@ -19,12 +19,38 @@ Check that no unintended files are staged:
 - Exclude `.env`, secrets, or local-only config files
 - Verify `.gitignore` covers generated/temp files
 
-**Security scan** — execute gate from `.claude/gates/security.gate.md`:
-1. Run gitleaks detect on staged changes
-2. If semgrep is configured, run semgrep scan
-3. If a dependency audit script is defined, run it
+**Security scan (mandatory hard gate — cannot skip)** — execute gate from `.claude/gates/security.gate.md`:
 
-If any security gate blocks → fix before proceeding to commit.
+### Step 1: Tool Availability (Layer 0)
+
+Check which scan tools are runnable:
+```bash
+which gitleaks || echo "GITLEAKS_MISSING"
+which semgrep || echo "SEMGREP_MISSING"
+which docker || echo "DOCKER_MISSING"
+```
+
+| Condition | Action |
+|-----------|--------|
+| gitleaks or semgrep available | Proceed to Step 2 |
+| Both missing + Docker available | Use Docker fallback (see gate file) |
+| ALL missing (tools + Docker) | Present resolution options → require user choice |
+
+**Hard gate**: If ALL checks are unavailable and no resolution → **❌ BLOCK COMMIT.**
+
+### Step 2: Execute Available Scans
+
+Run whichever layers are actually executable (at minimum, one must run):
+1. **gitleaks**: `gitleaks detect --source . --no-git --verbose` (or Docker fallback)
+2. **semgrep**: `semgrep scan --config=auto --error --quiet` (or Docker fallback)
+3. **Dependency audit**: detect ecosystem → run corresponding audit command
+
+### Step 3: Gate Decision
+
+Read gate status from `.claude/gates/security.gate.md` Gate Status Determination table.
+- ❌ BLOCKED → fix findings before proceeding
+- ⚠️ BYPASSED → log acknowledgment in commit message footer
+- ✅ PASS / ⚠️ PASS → continue to commit
 
 If tests exist, confirm they pass before proceeding:
 ```bash

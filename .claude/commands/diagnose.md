@@ -46,10 +46,19 @@ Compare plans vs specs:
 
 ### 5. Security Tooling
 
+**Security Gate Viability** — can the gate actually execute?
+
+| Condition | Status |
+|-----------|--------|
+| ≥1 native tool (gitleaks/semgrep) available | ✅ Gate functional |
+| Docker available as fallback | ⚠️ Reduced — Docker-based scanning |
+| No tools + no Docker | ❌ Gate non-functional — commits unprotected |
+
 | Tool | Check | Status |
 |------|-------|--------|
 | gitleaks | `which gitleaks` | ✅ Installed / ❌ Missing |
 | semgrep | `which semgrep` | ✅ Installed / ❌ Missing |
+| Docker (fallback) | `which docker` | ✅ Available / ❌ Missing |
 | Pre-commit hook | `.githooks/pre-commit` exists + executable | ✅/❌ |
 | Commit-msg hook | `.githooks/commit-msg` exists + `.git/hooks/commit-msg` is symlink | ✅/❌ |
 | CI pipeline | `.github/workflows/aicam-gates.yml` exists | ✅/❌ |
@@ -67,9 +76,9 @@ Compare plans vs specs:
 
 Read the most recent `.agents/plans/*.summary.md` and check:
 
-- `## TDD Log` section exists and is non-empty? ✅/❌（缺失 = 门禁截断或绕过）
-- `## Smoke Test Log` section exists? ✅/❌（缺失 = Smoke Gate 未执行或截断）
-- Non-exempt tasks in plan vs TDD Log entries: {logged}/{total}（缺口 = 门禁被截断跳过）
+- `## TDD Log` section exists and is non-empty? ✅/❌ (missing = gate truncated or bypassed)
+- `## Smoke Test Log` section exists? ✅/❌ (missing = Smoke Gate not executed or truncated)
+- Non-exempt tasks in plan vs TDD Log entries: {logged}/{total} (gap = gate truncated/skipped)
 
 Output warnings:
 - Any ❌ → `⚠ Gate execution evidence incomplete — possible context truncation or bypass`
@@ -104,8 +113,9 @@ Read `.agents/reports/TEST_DASHBOARD.md` and extract:
    {missing specs list if any}
 
 🔒 Security
-   gitleaks: {status} · semgrep: {status}
-   Pre-commit hook: {status} · CI pipeline: {status}
+   Gate viability: {✅ Functional / ⚠️ Docker fallback / ❌ Non-functional}
+   gitleaks: {status} · semgrep: {status} · Docker: {status}
+   Pre-commit hook: {status} · Commit-msg hook: {status} · CI pipeline: {status}
 
 🚦 Gates
    {N}/{total} gate files present
