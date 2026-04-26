@@ -16,7 +16,7 @@
 | **v1.3.0** | **2026-04-25** | **Architecture**: new Gate Adapter Layer (`.claude/gates/` 6 gate files) decouples gate definitions from command scripts; **Security**: integrated gitleaks (Secrets) + semgrep (SAST) + dependency audit (SCA) + pre-commit hook + CI pipeline template; **Commands**: new `/diagnose` (health check) + `/onboard` (interactive setup), command count 13→15; **Skills**: agent-browser merged into e2e-test + new `backend-test`, frontend/backend skills 2:2 balanced; **Metrics**: M1-M5 five-dimensional metrics + TEST_DASHBOARD upgraded with auto-calculation + trend alerts; **Process**: `/discover` Path A 3-question gate + `/code-review` diff scope constraint + `/hotfix` regression scope declaration + plan-template Risk Register + Test Data Strategy; **Docs**: CLAUDE-template added security scanning guidance section |
 | **v1.3.1** | **2026-04-25** | **CI**: refactored to eco-adaptive pipeline (preflight outputs ecosystem+project_type driving conditional steps) + new oasdiff Breaking Change detection step + Smoke Test filled with actual commands; **Gates**: contract.gate added oasdiff tool + spec archival protocol, coverage.gate fixed corrupted heading + added 5-ecosystem tool table; **Metrics**: M1 switched to git log auto-calculation + cross-platform fallback (macOS stat / Linux date -r); **Resilience**: /diagnose added gate execution completeness check (anti-truncation) + /verify-phase added TDD/Smoke entry count vs gate comparison (anti-bypass) + CLAUDE-template added Known Issues persistent section + /close-phase auto-extracts unresolved issues; **Engineering**: commit-msg hook enforces Conventional Commits + plan-feature sub-agent fault tolerance + commit.md security scan step + prime.md / WORKFLOW.md §11-A doc sync |
 | **v1.3.2** | **2026-04-25** | **Bug fixes**: Python rest-api smoke fallback logic fixed (`[ -n "$SERVER_PID" ]` dead code → `python -c "import uvicorn"` availability check, Flask/Django projects now correctly fallback to `python app.py`); /diagnose Section 5 security tools table added commit-msg hook check row (symlink install status now visible); **Quality**: 5th independent assessment confirms issue density convergence (P0/P1 cleared, 3 new findings all P1/P2 level) |
-| **v1.3.3** | **2026-04-25** | **Security**: security.gate adds Layer 0 tool availability pre-check (anti-silent-bypass) + Docker fallback + user confirmation protocol; /commit security scan upgraded to mandatory hard gate (all tools missing → ❌ blocks commit); /diagnose Section 5 adds Security Gate Viability assessment; **Command**: new `/aicam` interactive workflow guide (16-command reference + per-phase navigation + Skill/Gate catalog), command count 15→16 |
+| **v1.3.3** | **2026-04-25** | **Security**: /commit security scan upgraded to mandatory hard gate (gitleaks + semgrep + SCA) |
 
 ---
 
@@ -40,7 +40,7 @@
 
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
-| **Commands** | `.claude/commands/` | 16 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix`, `/diagnose`, `/onboard`, `/aicam` |
+| **Commands** | `.claude/commands/` | 15 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix`, `/diagnose`, `/onboard` |
 | **Skills** | `.claude/skills/` | 4 | `frontend-design`, `api-contract-first`, `e2e-test` (merged agent-browser), `backend-test` |
 | **Gates** | `.claude/gates/` | 6 | `tdd.gate.md`, `smoke.gate.md`, `security.gate.md`, `contract.gate.md`, `destructive-op.gate.md`, `coverage.gate.md` |
 | **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
@@ -79,7 +79,7 @@ Choose your level to avoid one-time cognitive overload:
 ```
 L0 — Zero Config (< 5 min)
      For: emergency fixes, single-file changes
-     Command: /hotfix, /aicam
+     Command: /hotfix
      Dependencies: none
 
 L1 — Minimal (< 15 min)
@@ -520,7 +520,7 @@ graph TD
 
 ```
 .claude/                        # AICAM workflow system directory (excludes project business code)
-├── commands/                   # 16 slash command scripts (/discover, /execute, /aicam, etc.)
+├── commands/                   # 15 slash command scripts (/discover, /execute, /hotfix, etc.)
 ├── skills/                     # Domain-specific skills (api-contract-first, frontend-design, etc.)
 ├── reference/                  # On-demand reference documents (components.md, api.md, etc.)
 │   ├── index.md                # Reference document index, describing when each doc is loaded
@@ -766,7 +766,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 16. **Surgical Changes**: Only modify exactly what the request requires — do not "improve" adjacent code, comments, or formatting; follow existing code style even if you would do it differently; flag unrelated dead code instead of silently deleting it; clean up unused imports/variables introduced by your changes, leave pre-existing dead code alone; every changed line must trace back to the user's request.
 17. **Explicit Skill Activation Rules**: Do not rely on auto-matching. Frontend components/pages → explicitly load `frontend-design`; API definition/field mapping → explicitly load `api-contract-first`; business workflow testing → explicitly load `e2e-test`. Workspace skills stay lean — remove skills missing core scripts (e.g., the deleted ui-ux-pro-max).
 18. **Hotfix Scope Discipline**: `/hotfix` is only for bugs with clear and narrow scope (≤3 files, no new API/DB migration); exceeding scope must switch to `/plan-feature`; TDD gate is non-negotiable; CLAUDE.md iteration log entry tagged `[hotfix]` to distinguish from regular Phase iterations.
-19. **Security scanning must not be silently skipped**: At least one security scan layer (gitleaks/semgrep/SCA) must be executable before `/commit`; when all tools are missing, provide Docker fallback or user written confirmation (`CONFIRM-SKIP`) path; no resolution → ❌ blocks commit.
+19. **Security scanning**: Execute gitleaks (Secrets) + semgrep (SAST) + dependency audit (SCA) before `/commit`; high-severity findings → ❌ blocks commit
 
 ---
 

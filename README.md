@@ -43,7 +43,7 @@ Or jump directly to `/discover [your idea]` if you know what you're building.
 
 ```
 .claude/
-├── commands/    16 slash commands    (/discover, /execute, /hotfix, /aicam, /diagnose...)
+├── commands/    15 slash commands    (/discover, /execute, /hotfix, /diagnose...)
 ├── skills/      4 domain skills      (frontend-design, api-contract-first, e2e-test, backend-test)
 ├── gates/       6 quality gates      (tdd, smoke, security, contract, destructive-op, coverage)
 ├── reference/   3+ docs + 6 test     (plan-template, spec-lite-template, test-strategies/*)
@@ -58,7 +58,7 @@ archive/         Historical records   (auto-archived by /close-phase)
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| v1.3.3 | 2026-04-25 | Security gate anti-silent-bypass (Layer 0 + Docker fallback), /aicam interactive guide |
+| v1.3.3 | 2026-04-25 | Mandatory 3-layer security scan (gitleaks + semgrep + SCA) on commit |
 | v1.3.2 | 2026-04-25 | Bug fixes: Python smoke fallback, /diagnose commit-msg hook check |
 | v1.3.1 | 2026-04-25 | Eco-adaptive CI, oasdiff breaking change detection, anti-truncation gates |
 | v1.3.0 | 2026-04-25 | Gate adapter layer, security trilogy, /diagnose + /onboard, M1-M5 metrics |

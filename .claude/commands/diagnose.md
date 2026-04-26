@@ -113,8 +113,7 @@ Read `.agents/reports/TEST_DASHBOARD.md` and extract:
    {missing specs list if any}
 
 🔒 Security
-   Gate viability: {✅ Functional / ⚠️ Docker fallback / ❌ Non-functional}
-   gitleaks: {status} · semgrep: {status} · Docker: {status}
+   gitleaks: {status} · semgrep: {status}
    Pre-commit hook: {status} · Commit-msg hook: {status} · CI pipeline: {status}
 
 🚦 Gates
