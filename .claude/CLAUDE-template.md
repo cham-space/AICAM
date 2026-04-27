@@ -154,7 +154,7 @@ For detailed component specs, see `docs/specs/*-design.md`.
 - fluffy CI runs full SAST (`semgrep`) + SCA (`npm/cargo/pip audit`) — Critical/High findings block merge
 
 ### Security Scanning (Automated — v1.3.0+)
-- **Local (pre-commit)**: gitleaks secrets detection + Spec-Lite existence check
+- **Local (pre-commit)**: configurable checks via `.githooks/config` — secrets detection, large file warnings, and (optionally) Spec-Lite/CLAUDE.md health
 - **CI (PR/push)**: semgrep SAST + dependency audit + unit tests + Smoke Test
 - **Gate definitions**: `.claude/gates/security.gate.md` (read when configuring CI)
 - **Config files**: `.gitleaks.toml` (secrets patterns), `.github/workflows/aicam-gates.yml` (CI pipeline)

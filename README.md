@@ -20,10 +20,20 @@ Every feature goes from idea to commit through a structured pipeline: **Discover
 ## Quick Start
 
 ```bash
-# Copy the workflow system to your project
+# 1. Core workflow (required)
 cp -r .claude/ /path/to/your/project/
-cp .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/
+
+# 2. CI gates (only for projects using GitHub Actions)
 cp -r .github/workflows/ /path/to/your/project/.github/
+
+# 3. Git hooks + security config (optional, enable local gates)
+cp -r .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/
+
+# 4. Activate hooks
+cd /path/to/your/project
+git config core.hooksPath .githooks
+
+# 5. Edit .githooks/config to enable/disable checks per project
 
 # In Claude Code, start interactive setup:
 /onboard

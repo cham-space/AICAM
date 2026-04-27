@@ -1,0 +1,28 @@
+# AICAM Pre-commit Hooks Config
+#
+# Edit the "enabled" list to control which checks run before each commit.
+# Comment out a check (prefix with #) to disable it.
+# Parameters below the enabled list can override defaults.
+
+enabled:
+  - spec-lite      # Check Spec-Lite coverage (AICAM workflow)
+  - claude-md      # Check CLAUDE.md size (AICAM workflow)
+  - secrets        # Detect secrets/credentials in staged files
+  - large-files    # Warn about large staged files
+
+# ── Check parameters (optional overrides) ──
+
+spec-lite:
+  plan_dir: ".agents/plans"
+  spec_dir: ".agents/specs"
+
+claude-md:
+  max_lines: 150
+
+secrets:
+  tool: auto       # "auto" = use gitleaks if installed, fallback to basic regex
+                   # "gitleaks" = require gitleaks, fail if not installed
+                   # "basic" = always use built-in regex scan (no external tool)
+
+large-files:
+  threshold_bytes: 500000   # 500KB

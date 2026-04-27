@@ -49,7 +49,14 @@
 
 ### 使用方式
 
-1. **新项目**：将 `.claude/` 目录整体复制到项目根目录，运行 `/discover` 开始
+1. **新项目**：将所需文件复制到项目根目录，运行 `/discover` 开始：
+   ```bash
+   cp -r .claude/ /path/to/your/project/
+   cp -r .github/workflows/ /path/to/your/project/.github/      # CI 门禁（仅 GitHub Actions）
+   cp -r .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/  # 本地 hooks
+   cd /path/to/your/project && git config core.hooksPath .githooks
+   # 编辑 .githooks/config 按项目启用/禁用检查项
+   ```
 2. **已有项目**：复制到已有项目后，跳过 Phase 0，直接从 `/plan-feature` 开始
 3. **迭代**：每个新功能独立走完 5 个 Phase 后归档，CLAUDE.md 保持精简可维护
 4. **紧急修复**：生产环境出现明确范围的 Bug 时，使用 `/hotfix` 跳过 Phase 1 规划，直接进入 TDD 修复流程（Smoke Test + Code Review 门禁仍适用）

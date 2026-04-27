@@ -49,7 +49,14 @@
 
 ### Usage
 
-1. **New Project**: Copy the `.claude/` directory to the project root, then run `/discover` to begin.
+1. **New Project**: Copy the required files to your project root, then run `/discover` to begin:
+   ```bash
+   cp -r .claude/ /path/to/your/project/
+   cp -r .github/workflows/ /path/to/your/project/.github/      # CI gates (GitHub Actions only)
+   cp -r .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/  # Local hooks
+   cd /path/to/your/project && git config core.hooksPath .githooks
+   # Edit .githooks/config to enable/disable checks per project
+   ```
 2. **Existing Project**: Copy to an existing project, skip Phase 0, start directly from `/plan-feature`.
 3. **Iteration**: Each feature independently completes all 5 phases before archiving; CLAUDE.md stays lean and maintainable.
 4. **Emergency Fix**: When a clearly scoped production bug appears, use `/hotfix` to skip Phase 1 planning and jump directly to the TDD fix flow (Smoke Test + Code Review gates still apply).

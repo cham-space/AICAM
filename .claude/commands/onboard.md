@@ -71,18 +71,23 @@ Complete L2 first, then:
 1. **Install gitleaks**: `brew install gitleaks`
    - **CI 注**: `gitleaks-action@v2` 对 public repo 免费，private repo 需付费 License。在 GitHub repo Settings → Secrets and variables → Actions 中添加 `GITLEAKS_LICENSE` secret。无 License 时 CI 已配置 `continue-on-error: true` 降级为非阻断 warning。也可替换为免费的 `trufflesecurity/trufflehog@main` action。
 2. **Install semgrep**: `pip install semgrep`
-3. **Install git hooks**:
+3. **Install git hooks**: Choose one:
    ```bash
+   # Option A: Set hooks path (recommended)
+   git config core.hooksPath .githooks
+
+   # Option B: Symlink individual hooks
    ln -sf ../../.githooks/pre-commit .git/hooks/pre-commit
    ln -sf ../../.githooks/commit-msg .git/hooks/commit-msg
    ```
-4. **Set up CI**: Copy `.github/workflows/aicam-gates.yml` — adapt commands to project ecosystem
-5. **Set up commitlint**: `npm install -D @commitlint/config-conventional`
-6. **Configure MCP** (optional):
+4. **Configure checks**: Edit `.githooks/config` — comment out checks not needed for this project
+5. **Set up CI**: Copy `.github/workflows/aicam-gates.yml` — adapt commands to project ecosystem
+6. **Set up commitlint**: `npm install -D @commitlint/config-conventional`
+7. **Configure MCP** (optional):
    - serena: `uv tool install -p 3.13 serena-agent@latest --prerelease=allow && serena setup claude-code`
    - typescript-lsp: `npm install -g ts-language-mcp && claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp`
-7. **Verify**: Run `/diagnose` — security tools + CI should show ✅
-8. **Ready**: Production-grade workflow with automated quality gates
+8. **Verify**: Run `/diagnose` — security tools + CI should show ✅
+9. **Ready**: Production-grade workflow with automated quality gates
 
 ## Post-Setup Validation
 
