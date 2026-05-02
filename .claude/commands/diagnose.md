@@ -84,6 +84,20 @@ Output warnings:
 - Any ❌ → `⚠ Gate execution evidence incomplete — possible context truncation or bypass`
 - All ✅ → `✅ Gate execution evidence complete`
 
+### 6.6. MCP Tool Availability (v1.4.0+)
+
+Check Playwright MCP server status for web projects:
+
+| MCP Tool | Check Method | Status |
+|----------|-------------|--------|
+| Playwright MCP server | `claude mcp list` shows "playwright" connected | ✅/❌ |
+| Browser navigate | `mcp__playwright__browser_navigate` available | ✅/❌ |
+| Browser snapshot | `mcp__playwright__browser_snapshot` available | ✅/❌ |
+
+If any ❌:
+- MCP server not registered → `claude mcp add --scope user playwright -- npx @playwright/mcp@latest`
+- MCP server disconnected → restart Claude Code session
+
 ### 7. Metric Snapshot (if TEST_DASHBOARD exists)
 
 Read `.agents/reports/TEST_DASHBOARD.md` and extract:
@@ -123,6 +137,9 @@ Read `.agents/reports/TEST_DASHBOARD.md` and extract:
 🛠️ Skills
    {N}/{total} skills present
    {missing skills list if any}
+
+🔧 MCP Tools
+   Playwright: {connected/disconnected} · navigate: {available/unavailable} · snapshot: {available/unavailable}
 
 📊 Metrics (last 3 phases)
    Cycle time: {trend} · Test density: {trend} · Pass rate: {percent}%

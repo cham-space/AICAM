@@ -86,6 +86,63 @@ npx playwright show-report   # View HTML report
 
 ---
 
+## MCP Browser Verification (Playwright MCP interactive mode)
+
+Use Playwright MCP for real-time browser verification with trace-level records. This mode complements script-based Playwright tests by generating human-readable snapshots, screenshots, and logs suitable for QA review and archival.
+
+### When to Use
+
+| Use MCP Mode | Use Script Mode |
+|-------------|-----------------|
+| Dev-time visual verification | CI regression pipeline |
+| Trace-level QA evidence | Reproducible test automation |
+| Exploratory testing | Pre-commit test gates |
+| UI state snapshot comparison | Code coverage tracking |
+
+### Tool Call Templates
+
+**Navigation and Snapshot:**
+```
+mcp__playwright__browser_navigate → url: "{base_url}{path}"
+mcp__playwright__browser_snapshot → captures accessibility tree of current page
+```
+
+**Interaction:**
+```
+mcp__playwright__browser_click → target: "{element description}"
+mcp__playwright__browser_type → target: "{input}", text: "{value}"
+mcp__playwright__browser_select_option → target: "{select}", values: ["{option}"]
+mcp__playwright__browser_fill_form → fields: [{target, name, type, value}, ...]
+```
+
+**Evidence Collection:**
+```
+mcp__playwright__browser_take_screenshot → filename: ".agents/reports/mcp-traces/{phase}-{ac}-{step}.png"
+mcp__playwright__browser_network_requests → filter: "/api/.*" (verify API calls)
+mcp__playwright__browser_console_messages → level: "error" (check for JS errors)
+```
+
+### Smoke Test via MCP
+
+For MCP-based Smoke Test, replace the static checklist with interactive verification:
+
+1. Start dev server in background
+2. `browser_navigate` to home page → `browser_snapshot` → verify core elements visible
+3. `browser_console_messages` → confirm no errors at level "error"
+4. `browser_navigate` to each key route → `browser_snapshot` → verify content
+5. `browser_take_screenshot` for QA evidence
+
+### Trace Storage
+
+All MCP traces stored under `.agents/reports/mcp-traces/`:
+- `{phase}-{ac-id}-{step}.snapshot.md` — accessibility snapshots
+- `{phase}-{ac-id}-{step}.png` — screenshots
+- `{phase}-{ac-id}-network.md` — network request logs
+- `{phase}-{ac-id}-console.md` — console message logs
+- `{phase}-index.md` — per-phase trace index
+
+---
+
 ## Unit Test Focus
 
 | Layer | Test Subject | Approach |

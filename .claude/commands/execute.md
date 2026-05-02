@@ -166,7 +166,7 @@ Provide a summary:
 | Type | Test File | Test Case Name | Covers AC | Result |
 |------|----------|------------|----------|------|
 | Unit | {path/to/test.ts} | {test name} | AC-{N} | ✅/❌ |
-| Workflow | {path/to/e2e.ts} | {test name} | AC-{N} | ✅/❌ |
+| Workflow | {path/to/e2e.ts or mcp-traces/*.md} | {test name} | AC-{N} | ✅/❌ |
 
 > Source: test files declared in plan file + test files created/modified this run. AC numbers correspond to acceptance criteria in Spec-Lite.
 
@@ -217,15 +217,26 @@ After all tasks and validations pass, generate a Phase summary file for `/close-
 ### Business Workflow Tests
 | Test File | Test Case Name | Covers AC | Result |
 |----------|------------|---------|------|
-| {path/to/e2e.ts} | {scenario name} | AC-{N} | ✅/❌ |
+| {path/to/e2e.ts or mcp-traces/*.md} | {scenario name} | AC-{N} | ✅/❌ |
 
 > Test case names are extracted directly from describe/it/test function names in test files; AC numbers correspond to acceptance criteria in `.agents/specs/{phase}.spec.md`.
+
+### MCP Trace Records (if applicable)
+| Trace Index | AC Coverage | Snapshots | Screenshots | Status |
+|-------------|------------|-----------|-------------|--------|
+| {mcp-traces/{phase}-index.md} | AC-{N} | {count} | {count} | ✅/❌ |
 
 ## Plan Deviations
 {list differences between plan and actual implementation:
 - File renames, additions, or skips
 - Architecture changes during implementation
 - Task reordering or merging}
+
+## Execution Mode
+{script | mcp | both} — {reason for choice}
+- Script mode: Playwright .spec.ts for CI regression
+- MCP mode: Playwright MCP interactive for QA trace records
+- Both: full coverage with both modes
 
 ## Bugs Found and Fixed
 {list bugs found during implementation:

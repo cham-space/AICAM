@@ -1,12 +1,13 @@
 ---
 name: e2e-test
-description: End-to-end testing skill (includes merged agent-browser capabilities). For web/SPA projects: launches parallel sub-agents to research codebase, then uses Playwright (preferred) or agent-browser CLI to test every user journey. For non-web types: redirects to corresponding test strategy or backend-test skill. Run after /execute to validate before code review.
+description: End-to-end testing skill (includes merged agent-browser capabilities). For web/SPA projects: launches parallel sub-agents to research codebase, then uses Playwright scripts (preferred), Playwright MCP interactive mode, or agent-browser CLI to test every user journey. For non-web types: redirects to corresponding test strategy or backend-test skill. Run after /execute to validate before code review.
 disable-model-invocation: true
 ---
 
 # End-to-End Application Testing
 
-> v1.3.0: agent-browser Skill merged into this skill. Use `e2e-test` for all browser automation needs.
+> v1.3.0: agent-browser Skill merged into this skill. v1.4.0: Playwright MCP interactive mode added as an execution path for trace-level verification records.
+> Use `e2e-test` for all browser automation needs.
 > For backend-only testing (REST API / DB / unit tests), use `backend-test` skill.
 
 ## Pre-flight Check
@@ -42,13 +43,13 @@ Check `.claude/reference/test-strategies/` for existence, and read the `## Proje
 
 | Detected Type | Test Tool | Notes |
 |--------------|-----------|-------|
-| `web` | **Playwright** (`npx playwright test`) | Automated E2E; skip agent-browser |
+| `web` | **Playwright** (`npx playwright test`) + **Playwright MCP** (interactive trace mode) | Script-based for CI regression, MCP for trace-level QA records |
 | `tauri` | **Tauri IPC direct call** (`invoke`) + frontend dev console | No browser automation |
 | `rest-api` | **API workflow test** (supertest / httpx) | Multi-step HTTP sequence |
 | `cli` | **CLI integration test** (subprocess assertions) | exit code + stdout |
 | `worker` | **Message queue stub + timing assertions** | Inject messages, observe processing |
 | `mobile` | **Detox / Maestro** | Simulator interactions |
-| Not detected | **agent-browser** (default fallback) | Falls back to browser automation |
+| Not detected | **agent-browser** (default fallback) | Falls back to browser automation; Playwright MCP recommended if available |
 
 If `web` type detected → go to **Playwright E2E flow** (Phase 1a below).
 Other types → execute via corresponding strategy (read `.claude/reference/test-strategies/{type}.md`).
@@ -126,6 +127,66 @@ Write test results to the `## Playwright Test Log` section of `summary.md`.
 > 当项目类型为 `tauri` / `rest-api` / `cli` / `worker` / `mobile` 时：
 > 直接读取 `.claude/reference/test-strategies/{type}.md`，按其中的"业务流程验证方式"执行。
 > 跳过后续 Phase 1-4 的 agent-browser 流程。
+
+---
+
+## Phase 1c: Playwright MCP Interactive Mode (web type, trace-level records)
+
+> Execute this phase after (or in place of) Phase 1a when trace-level verification records are needed for QA archiving. MCP mode generates per-step snapshots, screenshots, network traces, and console logs suitable for tester review.
+
+### Mode Selection
+
+| Scenario | Use |
+|----------|-----|
+| CI regression, reproducible automation | Phase 1a (Playwright scripts) |
+| Dev-time UI verification, trace-level QA records | Phase 1c (MCP interactive) |
+| Full coverage (recommended) | Phase 1a + Phase 1c |
+
+### 1. Verify MCP Availability
+
+Check that the Playwright MCP server is active. If `mcp__playwright__browser_navigate` is not available, fall back to Phase 1a or agent-browser.
+
+### 2. Execute Per-AC Trace Records
+
+Read the Spec-Lite AC list. For each AC involving UI interaction:
+
+1. `browser_navigate` to the target page
+2. `browser_snapshot` to capture initial state
+3. Execute the interaction steps described in the AC (click, type, select, etc.)
+4. `browser_snapshot` to capture post-interaction state
+5. Assert: expected visual state matches actual snapshot
+6. Record evidence to `.agents/reports/mcp-traces/{phase}-{ac-id}-{step}.snapshot.md`
+7. Optional: `browser_take_screenshot` for visual evidence, `browser_network_requests` for API verification, `browser_console_messages` for JS error checking
+
+### 3. Generate Trace Index
+
+After all ACs are traced, write a trace index to `.agents/reports/mcp-traces/{phase}-index.md`:
+
+```markdown
+# MCP Trace Index: {phase-name}
+
+**Date**: {date}
+**Project Type**: web
+**Execution Mode**: MCP Interactive
+
+| AC | Step | Action | Snapshot | Screenshot | Status |
+|----|------|--------|----------|------------|--------|
+| AC-1 | 1 | navigate(/page) | [snapshot](path) | [screenshot](path) | ✅ |
+```
+
+### 4. Write Summary
+
+Write MCP test results to `## MCP Trace Log` section of `summary.md`:
+
+```markdown
+## MCP Trace Log
+
+| AC | Steps | Snapshots | Screenshots | Issues | Status |
+|----|-------|-----------|-------------|--------|--------|
+| AC-1 | 3 | 3 | 2 | 0 | ✅ |
+```
+
+**MCP mode vs Script mode**: MCP traces are session artifacts for QA review. They do NOT replace Playwright scripts for CI regression. Both can coexist — scripts provide reproducible automation, MCP provides human-readable trace evidence.
 
 ---
 
@@ -280,6 +341,7 @@ Present a concise summary:
 
 **Journeys Tested:** [count]
 **Screenshots Captured:** [count]
+**MCP Trace Records:** [count] (snapshots: [N], screenshots: [N])
 **Issues Found:** [count] ([count] fixed, [count] remaining)
 
 ### Issues Fixed During Testing

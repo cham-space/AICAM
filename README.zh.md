@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.3.3 | 2026-04-25
+> 版本: v1.4.0 | 2026-05-02
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -17,6 +17,7 @@
 | **v1.3.1** | **2026-04-25** | **CI**：重构为生态自适应流水线（preflight 输出 ecosystem+project_type 驱动条件步骤）+ 新增 oasdiff Breaking Change 检测 step + Smoke Test 充实实际命令；**门禁**：contract.gate 新增 oasdiff 工具 + spec 归档协议、coverage.gate 修复损坏标题 + 新增 5 生态工具表；**度量**：M1 改用 git log 自动计算 + 跨平台 fallback（macOS stat / Linux date -r）；**韧性**：/diagnose 新增门禁执行完整度校验（anti-truncation）+ /verify-phase 新增 TDD/Smoke 条目数对比门禁（anti-bypass）+ CLAUDE-template 新增 Known Issues 持久节 + /close-phase 自动提取未解决问题；**工程**：commit-msg hook 强制 Conventional Commits + plan-feature 子代理容错规则 + commit.md 安全扫描步骤 + prime.md / WORKFLOW.md §11-A 文档同步 |
 | **v1.3.2** | **2026-04-25** | **Bug 修复**：Python rest-api smoke fallback 逻辑修复（`[ -n "$SERVER_PID" ]` 死代码 → `python -c "import uvicorn"` 可用性检测，Flask/Django 项目现可正确 fallback 到 `python app.py`）；/diagnose Section 5 安全工具表新增 commit-msg hook 检查行（symlink 安装状态可见）；**质量**：第五轮独立评估确认问题密度持续收敛（P0/P1 清零，3 项新发现均在 P1/P2 级） |
 | **v1.3.3** | **2026-04-25** | **安全**：/commit 安全扫描升级为强制门禁（gitleaks + semgrep + SCA 三层扫描） |
+| **v1.4.0** | **2026-05-02** | Playwright MCP 交互模式集成 — TDD Gate 扩展 MCP 验证模式、e2e-test Skill 增加 Phase 1c MCP 交互执行路径、MCP Trace 三层归档架构（Dashboard摘要 + Trace明细 + 归档追溯）、agent-browser 与 Playwright MCP 分工明确化 |
 
 ---
 
@@ -103,7 +104,7 @@ L2 — 标准配置（< 1 小时）← 推荐
 L3 — 高级配置（< 2 小时）
     适用: 团队协作、生产环境
     命令: L2 + CI/CD + 安全扫描 + MCP
-    依赖: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp
+    依赖: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp + playwright
 ```
 
 > 首次使用推荐运行 `/onboard` 进行交互式引导配置。
@@ -303,7 +304,7 @@ graph LR
 |------|------|
 | **Skill** | `e2e-test`（有前端时） / API 业务流测试（无前端时） |
 | **触发方式** | **自动建议 + 默认执行**，实施完成后必须执行 |
-| **执行角色** | Agent（有前端时调用 `e2e-test`，其内部使用 `agent-browser`） |
+| **执行角色** | Agent（有前端时调用 `e2e-test`，支持 Playwright MCP 交互模式 / Playwright 脚本 / agent-browser 三种路径） |
 | **动作** | 覆盖核心业务流程：关键路径、失败路径、权限路径；验证 UI/API 与数据一致性 |
 | **产出物** | 业务功能测试报告（含截图或 API 调用证据） |
 | **前置条件** | 若无前端，则改为 API 级业务流程测试，不可跳过 |
@@ -559,8 +560,12 @@ graph TD
 │   └── {phase-name}.spec.md    # Spec-Lite：功能边界、接口契约、AC 编号列表（建议 ≤120 行）
 ├── reviews/                    # Code Review 报告（/code-review 产出）
 │   └── {phase-name}-code-review.md  # 证据存档，不自动加载，/verify-phase 仅检查存在性
-└── reports/                    # 核验报告（/verify-phase 产出）
-    └── PHASE{N}_VERIFICATION_REPORT.md  # 含 AC 覆盖矩阵，归档时移入 archive/
+└── reports/                    # 核验报告 + MCP Trace 记录（/verify-phase + MCP 产出）
+    ├── PHASE{N}_VERIFICATION_REPORT.md  # 含 AC 覆盖矩阵，归档时移入 archive/
+    └── mcp-traces/              # MCP 浏览器交互 Trace（e2e-test Phase 1c 产出）
+        ├── {phase}-index.md     # 每 Phase Trace 索引
+        ├── {phase}-{ac}-{step}.snapshot.md
+        └── {phase}-{ac}-{step}.png
 
 docs/                           # 项目文档目录（业务/设计文档，非工作流系统）
 └── specs/                      # 设计文档（/discover Path B 产出）
@@ -583,6 +588,7 @@ archive/                        # 历史归档目录（/close-phase 后归集）
 | `.agents/specs/` | Phase 生命周期 | `/plan-feature` | `/execute`、`/verify-phase` | ✅ 执行期主动读取 |
 | `.agents/reviews/` | Phase 生命周期 | `/code-review` | `/verify-phase`（仅存在性检查） | ❌ 仅存档，不加载 |
 | `.agents/reports/` | Phase 生命周期 | `/verify-phase` | `/close-phase`（仅 Summary 节） | ⚠️ 仅读取摘要节 |
+| `.agents/reports/mcp-traces/` | Phase 生命周期 | `e2e-test` (Phase 1c) | `/verify-phase`（仅检查存在性） | ❌ 仅存档，不加载 |
 | `docs/specs/` | 永久（设计参考） | `/discover` (Path B) | `/plan-feature` 按需 | ⚠️ 按需引用 |
 | `archive/` | 永久历史 | `/close-phase` | 追溯时手动 | ❌ 归档后不自动加载 |
 
@@ -638,8 +644,8 @@ CLAUDE.md 迭代日志
 | Skill | 自动触发条件 |
 |-------|-------------|
 | `api-contract-first` | 操作 API 控制器/业务服务/数据传输层目录；或用户提到 "API contract"、"OpenAPI"、"swagger"、"frontend-backend"、"field mapping"；**涉及 API 即强制执行命名映射核验** |
-| `e2e-test` | 有前端且进入业务功能测试阶段时自动建议并默认执行 |
-| `agent-browser` | `e2e-test` Skill 内部调用 |
+| `e2e-test` | 有前端且进入业务功能测试阶段时自动建议并默认执行；**含 Playwright 脚本/Playwright MCP 交互模式/agent-browser 三种浏览器自动化能力** |
+| `agent-browser` | `e2e-test` Skill 内部调用（Playwright MCP 不可用时的 fallback） |
 | `frontend-design` | 涉及前端 UI 组件/页面/样式/配色/布局/动效时自动加载；用户提到 "UI"、"UX"、"组件"、"页面"、"样式"、"配色"、"布局"、"dark mode"、"响应式" |
 | `skill-creator` | 需要创建、修改、优化或评估任何 Skill 本身时加载；用于保持工作流 skill 的质量与触发准确性。加载路径：VS Code 扩展内置，非工作区 `.claude/skills/` |
 | `test-driven-development`（superpowers 内置） | **Phase 2 实施每个 Task 前自动加载**；实现新功能、修复 bug、重构行为变更时，要求先写失败测试再写实现代码 |
@@ -654,6 +660,7 @@ CLAUDE.md 迭代日志
 |------|------|------------|
 | `serena` | 符号级语义导航、跨文件重命名/引用查找、40+ 语言支持；大型复杂代码库中替代逐行 grep | Phase 2 实施（大型项目重构/导航） |
 | `typescript-lsp` | TypeScript 语言服务器：语义类型检查、符号分析、AST 搜索、诊断、重构、调用/类型层级分析；需项目含 `tsconfig.json` | Phase 2 实施（TS 项目）+ Phase 3 核验命令 |
+| `playwright` | 浏览器交互自动化（navigate/click/type/snapshot/screenshot/network/console）；实时 UI 验证 + Trace 级执行记录 | Phase 2 UI 验证 + Smoke Test + QA 归档 |
 
 ### MCP 安装与配置
 
@@ -693,7 +700,19 @@ claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp
 
 > 注意：`typescript-lsp` 仅在项目根目录含 `tsconfig.json` 时激活。非 TS 项目中调用会报错，属正常现象。
 
-#### 3. 配置 serena Hooks（推荐）
+#### 3. 安装 Playwright MCP
+
+```bash
+# Playwright MCP 通过 npx 运行，首次使用自动安装
+npx @playwright/mcp@latest --version
+
+# 注册到 Claude Code（全局生效）
+claude mcp add --scope user playwright -- npx @playwright/mcp@latest
+```
+
+> Playwright MCP 为所有 web 类型项目提供浏览器交互能力。无需额外安装浏览器驱动，MCP server 内置 Chromium。
+
+#### 4. 配置 serena Hooks（推荐）
 
 在 `~/.claude/settings.json` 中添加 hooks，防止 Agent 回退到 grep/read 循环而忽略符号工具：
 
@@ -726,7 +745,7 @@ claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp
 }
 ```
 
-#### 4. 验证安装
+#### 5. 验证安装
 
 ```bash
 # 检查 MCP 服务连接状态
@@ -737,6 +756,7 @@ claude mcp list
 ```
 serena: serena start-mcp-server --context=claude-code --project-from-cwd - ✓ Connected
 typescript-lsp: npx -y ts-language-mcp - ✓ Connected
+playwright: npx @playwright/mcp@latest - ✓ Connected
 ```
 
 > 重启 Claude Code 会话后，新的 MCP 工具即可使用。

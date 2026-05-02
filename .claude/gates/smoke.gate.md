@@ -32,9 +32,9 @@ Plan file must contain `## Smoke Test Checklist` section.
 **Date**: {date}
 **All items passed**: ✅
 
-| Action | Expected | Result |
-|--------|----------|--------|
-| {item} | {expected behavior} | ✅ PASS |
+| Action | Expected | Result | MCP Evidence |
+|--------|----------|--------|-------------|
+| {item} | {expected behavior} | ✅ PASS | [snapshot](path) |
 ```
 
 ## Hard Rules
@@ -43,9 +43,36 @@ Plan file must contain `## Smoke Test Checklist` section.
 - Any ❌ or ⏸️ entry → Smoke Test Gate = ❌
 - `⏸️ pending manual verification` → treated as ❌
 
+## MCP Browser Smoke Test (v1.4.0+)
+
+When Playwright MCP is available, Smoke Test MAY use interactive browser verification:
+
+### MCP Smoke Test Flow
+1. Start application/service
+2. `browser_navigate` → home page → `browser_snapshot` → verify core elements
+3. `browser_console_messages` → assert no errors
+4. Navigate each key route → snapshot → verify content
+5. `browser_take_screenshot` → save to `.agents/reports/mcp-traces/smoke-{item}.png`
+
+### MCP Smoke Test Log Format
+```markdown
+## Smoke Test Log (MCP Mode)
+
+**Date**: {date}
+**All items passed**: ✅
+
+| Action | Expected | Result | Snapshot | Screenshot |
+|--------|----------|--------|----------|------------|
+| Home page loads | Core elements visible | ✅ PASS | [snapshot](path) | [screenshot](path) |
+| No console errors | Zero errors at error level | ✅ PASS | [console](path) | - |
+```
+
+MCP Smoke Test evidence is stored alongside other MCP traces at `.agents/reports/mcp-traces/`.
+
 ## Runtime Health Checks (v1.3.0+)
 
 In addition to checklist items, verify:
 - App process is alive (not crashed silently)
 - Core endpoint/route responds (HTTP 200 / equivalent)
 - No `ERROR` level logs during startup
+- Browser console clear of errors (via `mcp__playwright__browser_console_messages`)

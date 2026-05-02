@@ -235,14 +235,16 @@ Design unit tests with fixtures and assertions following existing testing approa
 
 Define at least one end-to-end business workflow validation path based on project type:
 
-| Project Type | Business Workflow Verification Tool | Evidence Required |
-|---------|----------------|----------|
-| Web Frontend / SPA | **Playwright** (`npx playwright test`) | Screenshot + DOM assertion |
-| Tauri Desktop App | Tauri IPC direct call (`invoke`) + cpal mock | Return value + state snapshot |
-| REST API / Backend | API workflow test (multi-step request + DB checks) | Response assertion + DB row verification |
-| CLI Tool | CLI integration test (exit code + stdout/stderr) | Output assertion |
-| Worker / Background Service | Message queue stub + timing assertions | Log + eventual state consistency |
-| Mobile | Detox / Maestro flow | Screenshot + element assertion |
+| Project Type | Business Workflow Verification Tool | Evidence Required | Execution Mode |
+|---------|----------------|----------|---------|
+| Web Frontend / SPA | **Playwright** (`npx playwright test`) | Screenshot + DOM assertion | `both` |
+| Tauri Desktop App | Tauri IPC direct call (`invoke`) + cpal mock | Return value + state snapshot | `script` |
+| REST API / Backend | API workflow test (multi-step request + DB checks) | Response assertion + DB row verification | `script` |
+| CLI Tool | CLI integration test (exit code + stdout/stderr) | Output assertion | `script` |
+| Worker / Background Service | Message queue stub + timing assertions | Log + eventual state consistency | `script` |
+| Mobile | Detox / Maestro flow | Screenshot + element assertion | `script` |
+
+**Execution Mode**: script (Playwright .spec.ts for CI), mcp (Playwright MCP interactive for QA traces), both (full coverage recommended). MCP traces stored at .agents/reports/mcp-traces/{phase}-index.md.
 
 Include pass/fail evidence requirements (screenshots, response assertions, DB checks, or logs).
 

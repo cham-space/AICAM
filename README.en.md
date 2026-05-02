@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.3.3 | 2026-04-25
+> Version: v1.4.0 | 2026-05-02
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -17,6 +17,7 @@
 | **v1.3.1** | **2026-04-25** | **CI**: refactored to eco-adaptive pipeline (preflight outputs ecosystem+project_type driving conditional steps) + new oasdiff Breaking Change detection step + Smoke Test filled with actual commands; **Gates**: contract.gate added oasdiff tool + spec archival protocol, coverage.gate fixed corrupted heading + added 5-ecosystem tool table; **Metrics**: M1 switched to git log auto-calculation + cross-platform fallback (macOS stat / Linux date -r); **Resilience**: /diagnose added gate execution completeness check (anti-truncation) + /verify-phase added TDD/Smoke entry count vs gate comparison (anti-bypass) + CLAUDE-template added Known Issues persistent section + /close-phase auto-extracts unresolved issues; **Engineering**: commit-msg hook enforces Conventional Commits + plan-feature sub-agent fault tolerance + commit.md security scan step + prime.md / WORKFLOW.md §11-A doc sync |
 | **v1.3.2** | **2026-04-25** | **Bug fixes**: Python rest-api smoke fallback logic fixed (`[ -n "$SERVER_PID" ]` dead code → `python -c "import uvicorn"` availability check, Flask/Django projects now correctly fallback to `python app.py`); /diagnose Section 5 security tools table added commit-msg hook check row (symlink install status now visible); **Quality**: 5th independent assessment confirms issue density convergence (P0/P1 cleared, 3 new findings all P1/P2 level) |
 | **v1.3.3** | **2026-04-25** | **Security**: /commit security scan upgraded to mandatory hard gate (gitleaks + semgrep + SCA) |
+| **v1.4.0** | **2026-05-02** | Playwright MCP interactive mode integration — TDD Gate extended with MCP verification mode, e2e-test Skill adds Phase 1c MCP interactive execution path, MCP Trace three-tier archival architecture (Dashboard summary + Trace details + archival traceability), agent-browser and Playwright MCP clearly differentiated |
 
 ---
 
@@ -103,7 +104,7 @@ L2 — Standard (< 1 hr) ← recommended
 L3 — Advanced (< 2 hr)
      For: team collaboration, production
      Commands: L2 + CI/CD + security scanning + MCP
-     Dependencies: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp
+     Dependencies: GitHub Actions + gitleaks + semgrep + serena + typescript-lsp + playwright
 ```
 
 > First-time users: run `/onboard` for interactive guided setup.
@@ -303,7 +304,7 @@ graph LR
 |------|---------|
 | **Skill** | `e2e-test` (when frontend exists) / API business flow testing (when no frontend) |
 | **Trigger** | **Auto-suggested + default execution**, must be executed after implementation completes |
-| **Role** | Agent (calls `e2e-test` when frontend exists, which internally uses `agent-browser`) |
+| **Role** | Agent (calls `e2e-test` when frontend exists, supporting Playwright MCP interactive mode / Playwright scripts / agent-browser — three execution paths) |
 | **Actions** | Cover core business flows: critical path, failure path, permission path; verify UI/API and data consistency |
 | **Output** | Business function test report (with screenshots or API call evidence) |
 | **Prerequisite** | If no frontend, switch to API-level business flow testing — cannot be skipped |
@@ -559,8 +560,12 @@ graph TD
 │   └── {phase-name}.spec.md    # Spec-Lite: feature boundaries, interface contracts, AC number list (recommended ≤120 lines)
 ├── reviews/                    # Code Review reports (/code-review output)
 │   └── {phase-name}-code-review.md  # Evidence archive, not auto-loaded, /verify-phase only checks existence
-└── reports/                    # Verification reports (/verify-phase output)
-    └── PHASE{N}_VERIFICATION_REPORT.md  # Contains AC coverage matrix, moved to archive/ during archiving
+└── reports/                    # Verification reports + MCP Trace records (/verify-phase + MCP output)
+    ├── PHASE{N}_VERIFICATION_REPORT.md  # Contains AC coverage matrix, moved to archive/ during archiving
+    └── mcp-traces/              # MCP browser interaction traces (e2e-test Phase 1c output)
+        ├── {phase}-index.md     # Per-Phase trace index (summary for Dashboard reference)
+        ├── {phase}-{ac}-{step}.snapshot.md
+        └── {phase}-{ac}-{step}.png
 
 docs/                           # Project documentation directory (business/design docs, not workflow system)
 └── specs/                      # Design documents (/discover Path B output)
@@ -583,6 +588,7 @@ archive/                        # Historical archive directory (collected after 
 | `.agents/specs/` | Phase lifecycle | `/plan-feature` | `/execute`, `/verify-phase` | ✅ Active read during execution |
 | `.agents/reviews/` | Phase lifecycle | `/code-review` | `/verify-phase` (existence check only) | ❌ Archive only, not loaded |
 | `.agents/reports/` | Phase lifecycle | `/verify-phase` | `/close-phase` (Summary section only) | ⚠️ Summary section only |
+| `.agents/reports/mcp-traces/` | Phase lifecycle | `e2e-test` (Phase 1c) | `/verify-phase` (existence check only) | ❌ Archive only, not loaded |
 | `docs/specs/` | Permanent (design reference) | `/discover` (Path B) | `/plan-feature` on demand | ⚠️ On-demand reference |
 | `archive/` | Permanent history | `/close-phase` | Manual during追溯 | ❌ Not auto-loaded after archiving |
 
@@ -638,8 +644,8 @@ CLAUDE.md iteration log
 | Skill | Auto Trigger Condition |
 |-------|----------------------|
 | `api-contract-first` | Operating on API controller / business service / data transfer layer directories; or user mentions "API contract", "OpenAPI", "swagger", "frontend-backend", "field mapping"; **API involvement mandates naming mapping verification** |
-| `e2e-test` | Auto-suggested and default execution when a frontend exists and entering the business function testing stage |
-| `agent-browser` | Called internally by `e2e-test` Skill |
+| `e2e-test` | Auto-suggested and default execution when a frontend exists and entering the business function testing stage; **includes Playwright scripts / Playwright MCP interactive mode / agent-browser — three browser automation capabilities** |
+| `agent-browser` | Called internally by `e2e-test` Skill (fallback when Playwright MCP is unavailable) |
 | `frontend-design` | Auto-loaded when frontend UI components/pages/styles/color-schemes/layouts/animations are involved; user mentions "UI", "UX", "component", "page", "style", "color scheme", "layout", "dark mode", "responsive" |
 | `skill-creator` | Loaded when creating, modifying, optimizing, or evaluating any Skill itself; used to maintain workflow skill quality and trigger accuracy. Load path: VS Code extension built-in, not workspace `.claude/skills/` |
 | `test-driven-development` (superpowers built-in) | **Auto-loaded before every Task in Phase 2**; when implementing new features, fixing bugs, refactoring with behavior changes, requires writing failing tests before implementation code |
@@ -654,6 +660,7 @@ CLAUDE.md iteration log
 |------|------------|----------------------|
 | `serena` | Symbol-level semantic navigation, cross-file rename/reference lookup, 40+ language support; replaces line-by-line grep in large complex codebases | Phase 2 Implementation (large project refactoring / navigation) |
 | `typescript-lsp` | TypeScript language server: semantic type checking, symbol analysis, AST search, diagnostics, refactoring, call/type hierarchy; requires `tsconfig.json` in project root | Phase 2 Implementation (TS projects) + Phase 3 Verification commands |
+| `playwright` | Browser interaction automation (navigate/click/type/snapshot/screenshot/network/console); real-time UI verification + Trace-level execution recording | Phase 2 UI verification + Smoke Test + QA archival |
 
 ### MCP Installation & Configuration
 
@@ -693,7 +700,19 @@ claude mcp add --scope user typescript-lsp -- npx -y ts-language-mcp
 
 > Note: `typescript-lsp` only activates when the project root contains `tsconfig.json`. Calling it in non-TS projects will produce an error — this is expected behavior.
 
-#### 3. Configure serena Hooks (Recommended)
+#### 3. Install Playwright MCP
+
+```bash
+# Playwright MCP runs via npx, auto-installs on first use
+npx @playwright/mcp@latest --version
+
+# Register with Claude Code (global scope)
+claude mcp add --scope user playwright -- npx @playwright/mcp@latest
+```
+
+> Playwright MCP provides browser interaction capabilities for all web-type projects. No extra browser driver installation needed — MCP server includes built-in Chromium.
+
+#### 4. Configure serena Hooks (Recommended)
 
 Add hooks to `~/.claude/settings.json` to prevent the Agent from falling back to grep/read loops instead of using symbol tools:
 
@@ -726,7 +745,7 @@ Add hooks to `~/.claude/settings.json` to prevent the Agent from falling back to
 }
 ```
 
-#### 4. Verify Installation
+#### 5. Verify Installation
 
 ```bash
 # Check MCP server connection status
@@ -737,6 +756,7 @@ Expected output:
 ```
 serena: serena start-mcp-server --context=claude-code --project-from-cwd - ✓ Connected
 typescript-lsp: npx -y ts-language-mcp - ✓ Connected
+playwright: npx @playwright/mcp@latest - ✓ Connected
 ```
 
 > Restart the Claude Code session for new MCP tools to take effect.

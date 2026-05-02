@@ -108,6 +108,8 @@ Before running tests, declare the regression scope in the summary file:
 {e2e-or-integration-command}
 ```
 
+> **MCP Quick Verify**: For UI hotfixes with Playwright MCP available, use `browser_navigate → snapshot → verify` as a fast pre-commit visual check. MCP traces stored at `.agents/reports/mcp-traces/hotfix-*.md`. Script-based regression tests still required if the hotfix touches non-UI logic.
+
 If any existing test breaks → fix the regression before proceeding. Max 3 attempts per broken test.
 
 ---

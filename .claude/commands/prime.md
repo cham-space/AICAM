@@ -77,7 +77,7 @@ Provide a concise summary:
 
 ### Available Automation Skills
 - `api-contract-first`: API contract consistency validation (auto-triggers when API is involved)
-- `e2e-test`: End-to-end business feature testing — includes merged agent-browser capabilities (auto-executes when frontend is present; redirects to backend-test for non-web types)
+- `e2e-test`: End-to-end business feature testing — includes merged agent-browser capabilities and Playwright MCP interactive mode (v1.4.0+). For web projects, uses Playwright scripts (CI regression), Playwright MCP (trace-level QA records), or agent-browser (quick exploration). For other types, follows test-strategies/{type}.md. Use after /execute before /code-review.
 - `backend-test`: Backend test execution — unit/integration/DB tests with per-language templates (auto-triggers for backend-only work)
 - `frontend-design`: Frontend UI design intelligence (auto-loads when frontend UI is involved)
 

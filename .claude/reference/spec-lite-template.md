@@ -32,7 +32,7 @@
 | Test Type | Command | Evidence Required |
 |-----------|---------|-------------------|
 | Unit Tests | `{test runner command}` | Passing output + file count |
-| Business Workflow Tests | `{e2e or API workflow command}` | Screenshot or API call evidence |
+| Business Workflow Tests | `{e2e or API workflow command}` | Screenshot, MCP trace, or API call evidence |
 
 ---
 

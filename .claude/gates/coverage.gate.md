@@ -60,3 +60,20 @@ Use the appropriate tool for your ecosystem. Results feed into CI and `/verify-p
 | go | built-in `go test -cover` | `go test ./... -cover -coverprofile=coverage.out` |
 
 **CI integration**: The `unit-tests` job in `.github/workflows/aicam-gates.yml` runs the ecosystem-appropriate coverage command. Coverage output is compared against the thresholds defined above. If the tool is not installed, coverage check falls back to AI manual estimation in `/verify-phase`.
+
+## MCP Interactive Test Coverage (v1.4.0+)
+
+MCP interactive browser tests are tracked separately from script-based coverage:
+
+- MCP tests count toward **Business Workflow Test** minimum (>=1 flow per user story)
+- MCP tests do NOT count toward **line coverage** thresholds (require script-based tests with coverage instrumentation)
+- Each MCP trace record (`.agents/reports/mcp-traces/{phase}-index.md`) counts as 1 workflow test
+- MCP trace records are human-verifiable QA evidence, not automated assertions
+
+### Coverage Counting Rules
+
+| Test Type | Counts Toward Line Coverage | Counts Toward Workflow Test Minimum |
+|-----------|---------------------------|-------------------------------------|
+| Unit test (script) | ✅ Yes | ❌ No |
+| Playwright E2E script | ✅ Yes | ✅ Yes |
+| MCP interactive trace | ❌ No | ✅ Yes |
