@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.4.0 | 2026-05-02
+> 版本: v2.0.0 | 2026-05-03
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -18,12 +18,13 @@
 | **v1.3.2** | **2026-04-25** | **Bug 修复**：Python rest-api smoke fallback 逻辑修复（`[ -n "$SERVER_PID" ]` 死代码 → `python -c "import uvicorn"` 可用性检测，Flask/Django 项目现可正确 fallback 到 `python app.py`）；/diagnose Section 5 安全工具表新增 commit-msg hook 检查行（symlink 安装状态可见）；**质量**：第五轮独立评估确认问题密度持续收敛（P0/P1 清零，3 项新发现均在 P1/P2 级） |
 | **v1.3.3** | **2026-04-25** | **安全**：/commit 安全扫描升级为强制门禁（gitleaks + semgrep + SCA 三层扫描） |
 | **v1.4.0** | **2026-05-02** | Playwright MCP 交互模式集成 — TDD Gate 扩展 MCP 验证模式、e2e-test Skill 增加 Phase 1c MCP 交互执行路径、MCP Trace 三层归档架构（Dashboard摘要 + Trace明细 + 归档追溯）、agent-browser 与 Playwright MCP 分工明确化 |
+| **v2.0.0** | **2026-05-03** | 四层架构升级：新增产品定义层（design-brief-builder + design-maker + Pencil/Figma MCP）、发布层（release-builder）、进化层（evolution-engine + feedback-writer + EVOLUTION.md + hooks）；/onboard 升级为角色×层级引导；/prime 升级为层级感知加载；/create-prd 升级为多轮追问；CLAUDE-template 新增 Active Layers 声明；Skill 数 4→9；MCP 数 3→5 |
 
 ---
 
 ## 1. 项目概述
 
-**AICAM**（AI-assisted Code workflow for AI Masters）是一套可复用的 AI 辅助开发工作流系统，旨在为 Claude Code 提供标准化的 5 阶段开发生命周期（需求 → 规划 → 实施 → 核验 → 归档），确保每个功能从构思到提交的每一个环节都有据可循、有迹可查。
+**AICAM**（AI-assisted Code workflow for AI Masters）是一套跨工种 AI 协作框架，服务 PM、设计师、开发者及全栈综合型人才，覆盖从产品定义到代码交付到发布的完整生命周期。
 
 ### 核心特性
 
@@ -36,23 +37,49 @@
 | **渐进式披露** | 上下文按需加载，规划阶段只新增最小必要信息，避免上下文通胀 |
 | **上下文自维护** | 归档阶段自动压缩历史知识，CLAUDE.md 迭代日志超 150 行自动摘要 |
 | **证据驱动核验** | 每个核验结论必须有文件读取或命令输出为依据，不做猜测性结论 |
+| **四层架构** | 产品定义层 + 开发质量层 + 发布层 + 进化层，按角色按需激活 |
+| **进化系统** | hooks 自动捕捉反馈信号，频次驱动规则升级，越用越智能 |
+| **设计→代码链路** | Figma MCP 驱动原型设计，设计图为开发最高优先级参考 |
+
+### 四层架构
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ 产品定义层  PM/设计师: discover → create-prd → design     │
+├──────────────────────────────────────────────────────────┤
+│ 开发质量层  开发者: plan → execute → verify → close       │
+├──────────────────────────────────────────────────────────┤
+│ 发布层      DevOps/全栈: release-builder                  │
+├──────────────────────────────────────────────────────────┤
+│ 进化层      全体（后台）: hooks → feedback → 规则升级     │
+└──────────────────────────────────────────────────────────┘
+```
 
 ### 系统组成
 
 | 组件 | 路径 | 数量 | 用途 |
 |------|------|------|------|
 | **组件（Commands）** | `.claude/commands/` | 15 个 | `/discover`、`/create-prd`、`/ref-research`、`/create-rules`、`/init-project`、`/prime`、`/plan-feature`、`/execute`、`/code-review`、`/verify-phase`、`/close-phase`、`/commit`、`/hotfix`、`/diagnose`、`/onboard` |
-| **技能（Skills）** | `.claude/skills/` | 4 个 | `frontend-design`、`api-contract-first`、`e2e-test`(合并agent-browser)、`backend-test` |
+| **技能（Skills）** | `.claude/skills/` | 9 个 | `frontend-design`、`api-contract-first`、`e2e-test`(合并agent-browser)、`backend-test`、`design-brief-builder`、`design-maker`、`feedback-writer`、`evolution-engine`、`release-builder` |
 | **门禁（Gates）** | `.claude/gates/` | 6 个 | `tdd.gate.md`、`smoke.gate.md`、`security.gate.md`、`contract.gate.md`、`destructive-op.gate.md`、`coverage.gate.md` |
 | **参考文档** | `.claude/reference/` | 3 个 + 1 子目录 | `index.md`、`plan-template.md`、`spec-lite-template.md`；`test-strategies/` 子目录含 6 种类型的测试策略（cli/mobile/rest-api/tauri/web/worker） |
 | **模板** | `.claude/CLAUDE-template.md` | 1 个 | 新项目初始化时的 CLAUDE.md 种子文件（含 Simplicity First / Surgical Changes 规则 + Skill 激活规则 + 安全扫描指引 + 测试命令分类） |
-| **计划与规格** | `.agents/` | 2 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格 |
+| **计划与规格** | `.agents/` | 3+ 子目录 | `plans/` 存放实施计划，`specs/` 存放轻量规格，`feedback/` 存放进化层反馈记录 |
 
 ### 使用方式
+
+**选择你的角色进入：**
+
+| 角色 | 入口 |
+|------|------|
+| PM / 设计师 | 直接运行 `/onboard`，选择你的角色，AI 引导后续流程 |
+| 开发者 | `cp -r .claude/ .githooks/ .github/ .serena/ .agents/ <your-project>/` → `/onboard` |
+| 全栈独立 | `/onboard` → 选择"全栈独立开发"，走全链路路径 |
 
 1. **新项目**：将所需文件复制到项目根目录，运行 `/discover` 开始：
    ```bash
    cp -r .claude/ /path/to/your/project/
+   cp -r .agents/ /path/to/your/project/                         # 进化层反馈目录结构（feedback/）
    cp -r .github/workflows/ /path/to/your/project/.github/      # CI 门禁（仅 GitHub Actions）
    cp -r .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/  # 本地 hooks
    cd /path/to/your/project && git config core.hooksPath .githooks

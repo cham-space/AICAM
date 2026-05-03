@@ -1,8 +1,8 @@
 # AICAM — AI-Assisted Development Workflow
 
-> **v1.4.0** | 2026-05-02 | [cham](mailto:vccham@gmail.com)
+> **v2.0.0** | 2026-05-03 | [cham](mailto:vccham@gmail.com)
 
-**AI-assisted Code workflow for AI Masters** — a reusable, 5-phase development lifecycle system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
+**Cross-role AI Collaboration Framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) — serving PMs, designers, developers, and full-stack talents, covering the complete lifecycle from product definition to code delivery to release.
 
 Every feature goes from idea to commit through a structured pipeline: **Discover → Plan → Execute (TDD) → Verify → Archive**. Each phase has automated gates — no skipped tests, no unverified contracts, no drifting context.
 
@@ -16,8 +16,33 @@ Every feature goes from idea to commit through a structured pipeline: **Discover
 | **Eco-Adaptive CI** | Auto-detects npm/Python/Go/Rust ecosystems; per-ecosystem build, test, and smoke commands |
 | **Progressive Disclosure** | Context loaded on demand; archival compression keeps CLAUDE.md lean (< 150 lines) |
 | **L0-L3 Enablement** | From zero-config `/hotfix` to full CI/CD + MCP — pick your level, upgrade anytime |
+| **Four-Layer Architecture** | Product Definition + Development Quality + Release + Evolution, role-based activation |
+| **Evolution System** | Hooks auto-capture feedback signals, frequency-driven rule upgrades, smarter with use |
+| **Design-to-Code Pipeline** | Figma MCP-driven prototyping, design specs as highest-priority implementation reference |
+
+## Four-Layer Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Product Definition  PM/Design: discover → create-prd → design │
+├──────────────────────────────────────────────────────────┤
+│ Development Quality  Dev: plan → execute → verify → close    │
+├──────────────────────────────────────────────────────────┤
+│ Release              DevOps/Full-stack: release-builder       │
+├──────────────────────────────────────────────────────────┤
+│ Evolution            All (background): hooks → feedback → rules│
+└──────────────────────────────────────────────────────────┘
+```
 
 ## Quick Start
+
+**Choose your role:**
+
+| Role | Entry Point |
+|------|-------------|
+| PM / Designer | Run `/onboard`, select your role, AI guides subsequent workflow |
+| Developer | `cp -r .claude/ .githooks/ .github/ .serena/ <your-project>/` → `/onboard` |
+| Full-stack Independent | `/onboard` → select "Full-stack Independent", walk the full pipeline |
 
 ```bash
 # 1. Core workflow (required)
@@ -54,7 +79,7 @@ Or jump directly to `/discover [your idea]` if you know what you're building.
 ```
 .claude/
 ├── commands/    15 slash commands    (/discover, /execute, /hotfix, /diagnose...)
-├── skills/      4 domain skills      (frontend-design, api-contract-first, e2e-test+Playwright MCP, backend-test)
+├── skills/      9 domain skills      (frontend-design, api-contract-first, e2e-test+Playwright MCP, backend-test, design-brief-builder, design-maker, feedback-writer, evolution-engine, release-builder)
 ├── gates/       6 quality gates      (tdd, smoke, security, contract, destructive-op, coverage)
 ├── reference/   3+ docs + 6 test     (plan-template, spec-lite-template, test-strategies/*)
 │                strategies
@@ -68,6 +93,7 @@ archive/         Historical records   (auto-archived by /close-phase)
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| v2.0.0 | 2026-05-03 | 4-layer architecture, evolution system, Pencil/Figma MCP design pipeline, release-builder, 9 skills, 5 MCPs |
 | v1.4.0 | 2026-05-02 | Playwright MCP interactive mode: e2e-test 3-path automation, MCP Trace archival, TDD Gate MCP verification |
 | v1.3.3 | 2026-04-25 | Mandatory 3-layer security scan (gitleaks + semgrep + SCA) on commit |
 | v1.3.2 | 2026-04-25 | Bug fixes: Python smoke fallback, /diagnose commit-msg hook check |

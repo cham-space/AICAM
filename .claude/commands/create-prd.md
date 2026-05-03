@@ -5,6 +5,67 @@ argument-hint: [output-filename]
 
 # Create PRD: Generate Product Requirements Document
 
+## 模式选择
+
+> v2.0 新增多轮追问模式，适合产品需求不完全明确时使用。
+
+```
+选择 PRD 生成模式：
+
+  A) 快速生成（原有行为）
+     基于当前对话上下文直接生成 PRD，适合需求已明确的情况。
+     
+  B) 多轮追问（新增，推荐）
+     通过逐步追问明确核心需求，生成更高质量、AI 导向的 PRD。
+     适合从零开始构思产品，或需求仍有模糊点的情况。
+
+请选择 A/B（默认 B）:
+```
+
+## 模式 B：多轮追问流程
+
+> 每次只问一个问题，等待用户回答后再问下一个。共 5-7 轮。
+
+### 追问顺序
+
+**轮次 1 — 核心价值**  
+`这个产品要解决什么核心问题？用户现在是怎么解决这个问题的？`
+
+**轮次 2 — 目标用户**  
+`主要用户是谁？他们的技术背景是什么？（非技术用户/开发者/两者皆有）`
+
+**轮次 3 — MVP 范围**  
+`最小可用版本必须包含哪 3-5 个核心功能？哪些功能可以放到下一版？`
+
+**轮次 4 — 技术约束**  
+`技术栈有倾向吗？部署方式（本地/云/桌面应用）？有无第三方 API 依赖？`
+
+**轮次 5 — 成功定义**  
+`怎样算这个产品成功了？（用户行为指标/功能完成度/其他）`
+
+**轮次 6（仅有 UI 时问）— 交互方式**  
+`用户主要通过什么方式使用？（对话式/面板操作/命令行/混合）`
+
+**轮次 7（可选）— 变更追加**  
+`还有其他重要需求或约束要补充吗？（可直接跳过进入生成）`
+
+### 追问完成后
+
+所有答案收集完成后，生成 AI 导向格式的 PRD.md（见原有 PRD Structure）。
+同时创建 `Product-Spec-CHANGELOG.md` 初始版本：
+
+```markdown
+# Product Spec Changelog
+
+## v1.0 — {YYYY-MM-DD}
+
+**变更类型**: 初始版本  
+**变更内容**: 基于多轮追问生成 PRD 初始版本  
+**关键决策**: {从追问中提取的 2-3 个重要决策点}
+```
+
+每次需求变更后，create-prd 将自动追加新条目到此 CHANGELOG。
+
 ## Overview
 
 Generate a comprehensive Product Requirements Document (PRD) based on the current conversation context and requirements discussed. Use the structure and sections defined below to create a thorough, professional PRD.

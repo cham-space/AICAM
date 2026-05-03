@@ -1,6 +1,6 @@
 # AI 辅助开发工作流 — AICAM
 
-> 版本: v1.4.0 | 2026-05-02
+> 版本: v2.0.0 | 2026-05-03
 > 作者: cham (vccham@gmail.com)
 > 本文档描述基于当前 `.claude/commands/` + `.claude/skills/` 的完整开发工作流。
 > 每个节点标注：**触发方式 | 角色 | 产出物 | 下一步**
@@ -18,6 +18,67 @@
 | **v1.3.2** | **2026-04-25** | **Bug 修复**：Python rest-api smoke fallback 逻辑修复（`[ -n "$SERVER_PID" ]` 死代码 → `python -c "import uvicorn"` 可用性检测，Flask/Django 项目现可正确 fallback 到 `python app.py`）；/diagnose Section 5 安全工具表新增 commit-msg hook 检查行（symlink 安装状态可见）；**质量**：第五轮独立评估确认问题密度持续收敛（P0/P1 清零，3 项新发现均在 P1/P2 级） |
 | **v1.3.3** | **2026-04-25** | **安全**：/commit 安全扫描升级为强制门禁（gitleaks + semgrep + SCA 三层扫描） |
 | **v1.4.0** | **2026-05-02** | Playwright MCP 交互模式集成 — TDD Gate 扩展 MCP 验证模式、e2e-test Skill 增加 Phase 1c MCP 交互执行路径、MCP Trace 三层归档架构（Dashboard摘要 + Trace明细 + 归档追溯）、agent-browser 与 Playwright MCP 分工明确化 |
+| **v2.0.0** | **2026-05-03** | 四层架构升级：新增产品定义层（design-brief-builder + design-maker + Pencil MCP/Figma MCP）、发布层（release-builder）、进化层（evolution-engine + feedback-writer + EVOLUTION.md + hooks）；/onboard 升级为角色×层级引导；/prime 升级为层级感知加载；/create-prd 升级为多轮追问；CLAUDE-template 新增 Active Layers 声明；新增 Playwright 设计生成替代管线 |
+
+---
+
+## 0. 四层架构总览
+
+AICAM v2.0 是一套**跨工种 AI 协作框架**，服务 PM、设计师、开发者及全栈综合型人才。
+系统由四个功能层构成，每层服务特定角色和阶段，渐进披露，按需激活。
+
+### 层级定义
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [产品定义层]  角色: PM / 设计师                             │
+│  /discover → /create-prd(多轮) → design-brief → design-maker│
+├─────────────────────────────────────────────────────────────┤
+│  [开发质量层]  角色: 开发者（AICAM 核心）                    │
+│  Phase 0~4: plan → execute → verify → close + 6 Gates       │
+├─────────────────────────────────────────────────────────────┤
+│  [发布层]     角色: 全栈 / DevOps                            │
+│  release-builder: 版本管理 + 构建 + GitHub Release           │
+├─────────────────────────────────────────────────────────────┤
+│  [进化层]     角色: 全体（始终后台，无感运行）               │
+│  hooks → feedback/ → evolution-engine → EVOLUTION.md 规则升级│
+└─────────────────────────────────────────────────────────────┘
+```
+
+> **进化层是唯一不需要主动激活的层**。它通过 hooks 自动捕捉反馈信号，
+> 静默积累，仅在生成建议时轻提示，所有建议需用户确认后才执行。
+
+### 角色入口路径
+
+| 角色 | 推荐入口 | 激活层级 |
+|------|---------|---------|
+| **产品经理** | `/onboard` → 角色: PM → 全新项目路径 | 产品定义层 + 进化层 |
+| **设计师** | `/onboard` → 角色: 设计师 → 已有PRD路径 | 产品定义层（后半段）+ 进化层 |
+| **开发者** | `/onboard` → 角色: 开发者 → 已有PRD路径 | 开发质量层 + 进化层 |
+| **全栈独立开发** | `/onboard` → 角色: 全栈独立 | 全部四层，顺序单人模式 |
+| **维护/迭代** | `/plan-feature` 或 `/hotfix` | 开发质量层 + 进化层 |
+
+### 层级切换原则（全栈独立开发者适用）
+
+```
+产品定义层 → 开发质量层 的切换信号:
+  CLAUDE.md Active Layers 中产品定义层标记 ✅ 完成
+  PRD.md ✅ + Design-Brief.md ✅ + 设计图 ✅（有UI项目）
+  /prime 自动读取以上产物，跳过产品定义直接进入 Phase 1
+
+开发质量层 → 发布层 的切换信号:
+  所有 Phase 的 close-phase 完成
+  最终 /verify-phase 通过
+  调用 release-builder skill
+```
+
+### 渐进披露规则（v2.0 扩展）
+
+> L0-L3 原有层级保留，新增**角色维度**的渐进披露：
+
+- PM 运行 `/onboard` 时：只展示产品定义层的命令，开发命令静默
+- 开发者接手时：/prime 根据 Active Layers 只加载当前层相关文档
+- 进化层命令（feedback-writer、evolution-engine）默认不在帮助菜单首屏显示
 
 ---
 
@@ -115,12 +176,12 @@ graph LR
     F --> G["Phase 1\n功能规划"]
     H["/hotfix\n紧急修复"] --> I["Phase 2\nTDD修复"]
 
-    style A fill:#e1f5fe
-    style B fill:#e1f5fe
-    style C fill:#e1f5fe
-    style D fill:#e1f5fe
-    style E fill:#e1f5fe
-    style F fill:#e1f5fe
+    style A fill:#e8f5e9
+    style B fill:#e8f5e9
+    style C fill:#e8f5e9
+    style D fill:#e8f5e9
+    style E fill:#e8f5e9
+    style F fill:#e8f5e9
     style G fill:#fff3e0
     style H fill:#ffcdd2
     style I fill:#ffcdd2
@@ -128,7 +189,11 @@ graph LR
 
 ---
 
-## 3. Phase 0：项目初始化
+## 3. Phase 0-P（产品定义层）
+
+> **层级归属**: 产品定义层  
+> **角色**: PM / 设计师 / 全栈独立开发者  
+> **可跳过**: 已有 PRD.md + 设计图的项目可从 Phase 1（开发质量层）直接开始
 
 > 全新项目或新成员加入时执行，已有项目可跳过。
 > **核心理念：先对话沟通 + 调研，再产出文档，最后初始化环境。**
@@ -156,6 +221,30 @@ graph LR
 | **执行角色** | Agent（基于 0-A 的对话内容提取需求） |
 | **动作** | 生成 PRD（执行摘要、目标用户、MVP 范围、用户故事、架构、技术栈、迭代计划） |
 | **产出物** | `PRD.md` — 产品需求文档，后续所有 Phase 的源头 |
+| **下一步** | → 0-C |
+
+### 节点 0-B2：设计规范生成（有 UI 项目必须，CLI/API 项目可跳过）
+
+| 项目 | 内容 |
+|------|------|
+| **Skill** | `design-brief-builder` |
+| **触发方式** | 手动，PRD 创建后，有 UI 界面的项目 |
+| **执行角色** | Agent（多轮追问，每次一问）|
+| **动作** | 追问产品定位、配色方案、交互风格、动效偏好等，生成 Design-Brief.md |
+| **产出物** | `Design-Brief.md` — 视觉设计规范，控制 AI 生成 UI 时的一致性 |
+| **下一步** | → 0-B3（有 Pencil/Figma MCP 时）→ Playwright 降级管线 → 文字 Mockup 终极降级 |
+
+### 节点 0-B3：设计原型图生成（可选，依赖 Pencil/Figma MCP）
+
+| 项目 | 内容 |
+|------|------|
+| **Skill** | `design-maker` |
+| **触发方式** | 手动，Design-Brief.md 创建后，推荐 Pencil MCP（AI 自动生成设计图），备选 Figma MCP（读取已有 Figma 稿） |
+| **执行角色** | Agent（调用 Pencil MCP 全自动绘制 .pen 设计文件；Figma MCP 读取已有 Figma 设计稿实现代码） |
+| **动作** | 基于 PRD.md + Design-Brief.md，规划组件清单 → 绘制主页面 → 绘制变体页面 → 检查空状态 |
+| **产出物** | Pencil/Figma 中的原型图；记录设计图路径到 CLAUDE.md Key Files |
+| **降级方案** | 无 MCP → Playwright 渲染管线（HTML/CSS 原型 → 截图作为设计参考）→ 终极降级：文字版 Design-Mockup-Description.md |
+| **权重说明** | ⚠️ 设计图是后续开发的**最高优先级参考**，高于 PRD.md 和 Design-Brief.md |
 | **下一步** | → 0-C |
 
 ### 节点 0-C：前端组件与 API 最佳实践调研及文档化
@@ -412,8 +501,58 @@ graph LR
 | **下一步** | → 下一个 Phase 的 1-A |
 
 ---
+## 9. Phase R：发布层
 
-## 9. 完整工作流图
+> 功能开发完成、所有 Phase close 后执行。可选，CLI/内部工具可跳过。
+
+### 节点 R-A：构建发布
+
+| 项目 | 内容 |
+|------|------|
+| **Skill** | `release-builder` |
+| **触发方式** | 手动，全部开发 Phase 完成后 |
+| **执行角色** | Agent |
+| **动作** | 读取 git log → 建议语义版本号 → 生成/更新 CHANGELOG.md → 构建产物 → 安全扫描 → 创建 GitHub Release |
+| **产出物** | CHANGELOG.md 更新 + GitHub Release |
+| **下一步** | 项目迭代时回到 Phase 1 |
+
+---
+
+## 10. 进化层（跨全流程，始终激活）
+
+> 无独立 Phase，贯穿所有层级全程运行。用户无需主动管理。
+
+### 工作机制
+
+```
+触发: PostToolUse hook 检测到修正/不满意关键词
+  ↓
+feedback-writer skill 静默记录到 .agents/feedback/
+  ↓
+SessionStart 或 /prime 时 evolution-engine 扫描 feedback/
+  ↓
+同类反馈 ≥3 次 → 生成「规则升级建议」
+  ↓
+用户确认（必须手动确认）→ 更新对应 skill/gate 文件
+```
+
+### 反馈来源
+
+| 来源 | 触发方式 | 记录形式 |
+|------|---------|---------|
+| 用户主动说「记下来」/ 「每次都要」 | detect-feedback hook 提醒 | 主动记录 |
+| 用户消息含修正信号词 | PostToolUse hook 检测 | 半自动记录（提醒主 agent） |
+| /close-phase 提取 lessons | close-phase 集成 | 自动写入 feedback/ |
+
+### 进化原则
+
+- **不自动修改任何规则**：所有建议需用户明确确认
+- **跨项目积累**：feedback/ 可随 .claude/ 目录跨项目共享
+- **透明可查**：所有反馈记录在 .agents/feedback/index.md 可见
+
+---
+
+## 11. 完整工作流图
 
 ```mermaid
 graph TD
@@ -483,7 +622,7 @@ graph TD
 
 ---
 
-## 10. 角色说明
+## 12. 角色说明
 
 | 角色 | 职责 |
 |------|------|
@@ -493,7 +632,7 @@ graph TD
 
 ---
 
-## 11. 产出物清单
+## 13. 产出物清单
 
 | 产出物 | 生成命令 | 归宿 |
 |--------|----------|------|
@@ -512,7 +651,7 @@ graph TD
 
 ---
 
-## 11-A. 目录结构说明
+## 13-A. 目录结构说明
 
 > 以下目录均为 AICAM 工作流的运行时产物目录，与项目源代码目录严格分离。
 
@@ -541,6 +680,11 @@ graph TD
 │   ├── destructive-op.gate.md   # 危险操作检测门禁（CRITICAL/HIGH/MEDIUM 分级）
 │   └── coverage.gate.md         # 覆盖率门禁（按项目类型分阈值）
 ├── CLAUDE-template.md           # 新项目 CLAUDE.md 种子文件（含安全扫描、Simplicity First / Surgical Changes / Skill 激活规则）
+├── EVOLUTION.md                  # 进化引擎规则文件（反馈分类、阈值规则、建议格式；evolution-engine skill 专用）
+├── hooks/                        # 自动化兜底脚本（settings.json hooks 触发）
+│   ├── detect-feedback-signal.sh # PostToolUse: 检测用户修正/不满意关键词
+│   ├── stop-gate.sh              # Stop: 检查未审查 Phase 并提醒 /code-review
+│   └── check-evolution.sh        # SessionStart: 扫描反馈候选并提醒
 └── WORKFLOW.md                 # 本文档：工作流全局说明
 
 .agents/                        # AI Agent 运行时产物目录（所有阶段产出集中于此）
@@ -558,6 +702,10 @@ graph TD
         ├── {phase}-index.md     # 每 Phase Trace 索引（摘要供 Dashboard 引用）
         ├── {phase}-{ac}-{step}.snapshot.md
         └── {phase}-{ac}-{step}.png
+├── feedback/                   # 进化层反馈记录（feedback-writer + evolution-engine 产出）
+│   ├── index.md                # 反馈索引（列表 + 频次统计 + 毕业候选状态）
+│   ├── EVOLUTION-LOG.md        # 进化执行日志（所有建议的确认/拒绝记录）
+│   └── entries/                # 单条反馈详情文件（FB-{NNN}-{slug}.md）
 
 docs/                           # 项目文档目录（业务/设计文档，非工作流系统）
 └── specs/                      # 设计文档（/discover Path B 产出）
@@ -580,13 +728,15 @@ archive/                        # 历史归档目录（/close-phase 后归集）
 | `.agents/specs/` | Phase 生命周期 | `/plan-feature` | `/execute`、`/verify-phase` | ✅ 执行期主动读取 |
 | `.agents/reviews/` | Phase 生命周期 | `/code-review` | `/verify-phase`（仅存在性检查） | ❌ 仅存档，不加载 |
 | `.agents/reports/` | Phase 生命周期 | `/verify-phase` | `/close-phase`（仅 Summary 节） | ⚠️ 仅读取摘要节 |
+| `.claude/hooks/` | 永久 | 手动维护（Phase C 执行） | `settings.json` hooks 事件触发 | ❌ 仅 shell 脚本，不在 AI 上下文 |
+| `.agents/feedback/` | 跨 Phase 积累 | `feedback-writer`、`/close-phase` Step 10 | `evolution-engine`（/prime 或手动触发） | ❌ 仅存档，不加载 |
 | `.agents/reports/mcp-traces/` | Phase 生命周期 | `e2e-test` (Phase 1c) | `/verify-phase`（仅检查存在性） | ❌ 仅存档，不加载 |
 | `docs/specs/` | 永久（设计参考） | `/discover` (Path B) | `/plan-feature` 按需 | ⚠️ 按需引用 |
 | `archive/` | 永久历史 | `/close-phase` | 追溯时手动 | ❌ 归档后不自动加载 |
 
 ---
 
-## 11-B. 测试用例追踪链
+## 13-B. 测试用例追踪链
 
 每个 Phase 的测试用例通过两层文档形成完整的 AC ↔ Test 追踪链，无需全库扫描，不增加执行期上下文。
 
@@ -631,7 +781,7 @@ CLAUDE.md 迭代日志
 
 ---
 
-## 12. Skill 自动触发条件
+## 14. Skill 自动触发条件
 
 | Skill | 自动触发条件 |
 |-------|-------------|
@@ -644,7 +794,7 @@ CLAUDE.md 迭代日志
 | `systematic-debugging`（superpowers 内置） | 遇到 bug、测试失败、非预期行为时立即加载；**禁止在定位根因前提出修复方案** |
 | `requesting-code-review`（superpowers 内置） | Phase 3 核验通过后、进入 commit 前；或实施重大功能后建议执行；派发独立 code-reviewer subagent 进行审查 |
 
-## 13. MCP / Plugin 工具（按需调用，零上下文消耗）
+## 15. MCP / Plugin 工具（按需调用，零上下文消耗）
 
 > 以下工具为 Plugin/MCP，不加载文档，仅在 Agent 主动调用时执行，上下文负担为零。
 
@@ -652,7 +802,9 @@ CLAUDE.md 迭代日志
 |------|------|------------|
 | `serena` | 符号级语义导航、跨文件重命名/引用查找、40+ 语言支持；大型复杂代码库中替代逐行 grep | Phase 2 实施（大型项目重构/导航） |
 | `typescript-lsp` | TypeScript 语言服务器：语义类型检查、符号分析、AST 搜索、诊断、重构、调用/类型层级分析；需项目含 `tsconfig.json` | Phase 2 实施（TS 项目）+ Phase 3 核验命令 |
-| `playwright` | 浏览器交互自动化（navigate/click/type/snapshot/screenshot/network/console）；实时 UI 验证 + Trace 级执行记录 | Phase 2 UI 验证 + Smoke Test + QA 归档 |
+| `playwright` | 浏览器交互自动化（navigate/click/type/snapshot/screenshot/network/console）；实时 UI 验证 + Trace 级执行记录 + QA 归档 | Phase 2 UI 验证 + Smoke Test |
+| `pencil` | 设计生成：AI 从需求文档全自动生成 .pen 设计原型图（Pencil VS Code 扩展 MCP）；支持 batch_design、get_screenshot、snapshot_layout | Phase 0-B3 设计原型图生成 |
+| `figma` | Figma→代码：读取 Figma 文件数据并一键实现前端代码（Framelink figma-developer-mcp）；需 Figma 账号 + Token | Phase 0-B3（已有 Figma 稿）+ Phase 2 UI 实施 |
 
 ### MCP 安装与配置
 
@@ -704,7 +856,31 @@ claude mcp add --scope user playwright -- npx @playwright/mcp@latest
 
 > Playwright MCP 为所有 web 类型项目提供浏览器交互能力。无需额外安装浏览器驱动，MCP server 内置 Chromium。
 
-#### 4. 配置 serena Hooks（推荐）
+#### 4. 安装 Pencil MCP（推荐 — AI 自动生成设计原型图）
+
+Pencil 是 VS Code 扩展内置的 MCP server，支持 AI 全自动绘制 .pen 设计文件，无需外部账号。
+
+```bash
+# 1. 在 VS Code 中安装 Pencil 扩展
+# 2. 注册 MCP 到 Claude Code（路径根据实际二进制位置调整）
+claude mcp add --scope user pencil -- \
+  /Users/<user>/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64 \
+  --app visual_studio_code
+```
+
+> 设计工具优先级：Pencil MCP（AI 自动生成设计图）> Figma MCP（读取已有 Figma 稿）> Playwright 管线（HTML/CSS → 截图降级）> 文字 Mockup（终极降级）。
+
+#### 5. 安装 Figma MCP（可选 — 适合已有 Figma 设计稿）
+
+```bash
+# 需 Figma 账号 + Personal Access Token（figma.com → Settings → Personal Access Tokens）
+claude mcp add --scope user figma -- \
+  npx -y figma-developer-mcp --figma-api-key="$FIGMA_TOKEN" --stdio
+```
+
+> Figma MCP 方向是 Figma→读取→代码。适合设计师已画好 Figma 稿时，AI 读取设计稿并一键实现前端代码。
+
+#### 6. 配置 serena Hooks（推荐）
 
 在 `~/.claude/settings.json` 中添加 hooks，防止 Agent 回退到 grep/read 循环而忽略符号工具：
 
@@ -737,7 +913,7 @@ claude mcp add --scope user playwright -- npx @playwright/mcp@latest
 }
 ```
 
-#### 5. 验证安装
+#### 7. 验证安装
 
 ```bash
 # 检查 MCP 服务连接状态
@@ -746,15 +922,18 @@ claude mcp list
 
 预期输出：
 ```
-serena: serena start-mcp-server --context=claude-code --project-from-cwd - ✓ Connected
+serena: serena start-mcp-server ... - ✓ Connected
 typescript-lsp: npx -y ts-language-mcp - ✓ Connected
+playwright: npx @playwright/mcp - ✓ Connected
+pencil: /Users/<user>/.pencil/mcp/.../mcp-server-darwin-arm64 --app visual_studio_code - ✓ Connected
+figma: npx -y figma-developer-mcp ... - ✓ Connected
 ```
 
 > 重启 Claude Code 会话后，新的 MCP 工具即可使用。
 
 ---
 
-## 14. 关键原则
+## 16. 关键原则
 
 1. **Phase 0 只跑一次**，后续每个功能从 Phase 1 开始循环
 2. **计划不写代码**，实施不改计划结构（发现需要改计划，先暂停与用户确认）
@@ -788,7 +967,7 @@ typescript-lsp: npx -y ts-language-mcp - ✓ Connected
 
 ---
 
-## 15. 引用与致谢
+## 17. 引用与致谢
 
 AICAM 工作流系统的设计与实现参考了以下开源社区思路与最佳实践，在此致谢：
 

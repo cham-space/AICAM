@@ -11,6 +11,31 @@ Build comprehensive understanding of the codebase by analyzing structure, docume
 
 ## Process
 
+### 0. 检测 Active Layers（新增）
+
+读取 CLAUDE.md 中的 `## Active Layers` 声明（若存在）：
+
+```markdown
+若 Active Layers 声明存在：
+  - 产品定义层 ✅ 完成 → 加载 PRD.md + Design-Brief.md（若存在）
+  - 产品定义层 🔄 进行中 → 加载 PRD.md，提示"产品定义层未完成"
+  - 开发质量层 🔄 进行中（Phase N/M）→ 加载当前 Phase 的 spec/plan
+  - 发布层未激活 → 不加载 release 相关文档
+  
+若 Active Layers 声明不存在：
+  - 使用原有逻辑（读取所有标准文档），不改变行为
+```
+
+**触发进化层扫描（仅在有 feedback/ 目录时）**:
+
+```
+检查 .agents/feedback/ 是否存在：
+  存在 → 在 Output Report 输出完成后，后台调用 evolution-engine skill 扫描
+         （M4 修正: 完全非阻塞 — prime 主流程不等待扫描结果，扫描独立完成）
+         → 若有毕业候选，在 Output Report 末尾轻提示（不超过 1 行）
+  不存在 → 跳过，不输出任何信息
+```
+
 ### 1. Analyze Project Structure
 
 List all tracked files:
@@ -92,3 +117,27 @@ Provide a concise summary:
 - Any notable observations or issues
 
 **Use bullet points and clear headings for quick scanning.**
+
+### Active Layers 状态
+
+```
+[产品定义层] {状态图标} — {PRD/设计图完成情况}
+[开发质量层] {状态图标} — {Phase N/M 或 N个Phase已完成}
+[发布层]     {状态图标} — {未激活/已完成}
+[进化层]     ✅ 后台运行 — {N}条反馈已记录{若有候选: · 💡{N}条进化建议待查看}
+```
+
+### 当前层级的可用命令
+
+```
+{根据 Active Layers 只展示当前相关的命令，其他层的命令不展示}
+
+示例（开发质量层进行中）:
+  /plan-feature  [功能规划]
+  /execute       [实施]  
+  /code-review   [代码审查]
+  /verify-phase  [核验]
+  /close-phase   [归档]
+  /commit        [提交]
+  /hotfix        [紧急修复]
+```

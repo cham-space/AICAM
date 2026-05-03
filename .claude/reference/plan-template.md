@@ -57,6 +57,18 @@ Create one-page spec at `.agents/specs/{feature-name}.spec.md` (target <= 120 li
 - `{path/to/new_interface_file}` - API Controller, Router, or Interface to expose the functionality.
 - `{path/to/new_test_file}` - Unit and integration tests for the new implementation.
 
+### Design References（有 UI 项目必须，开发前读取）
+
+> ⚠️ 若项目存在以下文件，**开发前必须先读取**，设计图是最高优先级参考：
+
+| 文件/链接 | 优先级 | 读取时机 |
+|---------|--------|---------|
+| `{Figma 设计图}` | 🥇 最高 — 视觉呈现以此为准 | 开始每个涉及 UI 的 Task 前 |
+| `Design-Brief.md` | 🥈 次高 — 设计图未覆盖的细节 | 开始每个涉及 UI 的 Task 前 |
+| `PRD.md` | 🥉 第三 — 功能逻辑来源 | 规划阶段读取 |
+
+若 Phase 较长、上下文被挤出，**每个新 Task 开始前重新读取设计图**（防止 AI 遗忘设计规范）。
+
 ### Relevant Documentation YOU SHOULD READ THESE BEFORE IMPLEMENTING!
 
 - [Documentation Link 1](https://example.com/doc1#section)

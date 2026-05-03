@@ -120,6 +120,31 @@ For detailed component specs, see `docs/specs/*-design.md`.
 |------|---------|
 | `{path}` | {1-line description} |
 
+<!-- 产品定义层产出物（有UI项目取消注释）:
+| `PRD.md` | 产品需求文档 — AI 开发的功能边界来源 |
+| `Design-Brief.md` | 设计规范文档 — 配色/交互/动效约定（开发时最高优先级）|
+| `{figma/pencil-link}` | 原型设计图 — 开发最高优先级参考 |
+-->
+
+---
+
+## Active Layers
+
+> 声明本项目当前激活的功能层。用于 /prime 按需加载上下文，/onboard 路径路由。
+> 进化层始终激活，无需声明。
+
+| 层级 | 状态 | 产出物完成情况 |
+|------|------|--------------|
+| **产品定义层** | ⬜ 未激活 / 🔄 进行中 / ✅ 完成 | PRD.md ⬜ · Design-Brief.md ⬜ · 设计图 ⬜ |
+| **开发质量层** | ⬜ 未激活 / 🔄 进行中（Phase N/M）/ ✅ 完成 | — |
+| **发布层** | ⬜ 未激活 / ✅ 完成 | CHANGELOG.md ⬜ · GitHub Release ⬜ |
+| **进化层** | ✅ 始终激活 | .agents/feedback/ 已记录 N 条反馈 |
+
+> **维护规则**:
+> - /close-phase 完成后手动更新开发质量层进度
+> - design-brief-builder 完成后手动更新产品定义层状态
+> - release-builder 完成后手动更新发布层状态
+
 ---
 
 ## On-Demand Context

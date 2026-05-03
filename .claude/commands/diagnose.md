@@ -152,3 +152,19 @@ Overall Health: 🟢 Healthy / 🟡 Needs attention / 🔴 Critical
 Recommended actions:
   {actionable items list}
 ```
+
+## Section 8: 进化层健康检查
+
+**8-1: feedback/ 目录状态** — 检查 `.agents/feedback/entries/` 条目数
+
+**8-2: 毕业候选检查** — 读取 index.md，统计 `candidate` 状态，若有则提示运行 evolution-engine
+
+**8-3: 近期会话反馈提醒**
+
+```
+近期有以下修正行为吗？（有则建议用 feedback-writer 记录）
+□ 要求 AI 改变某个习惯性做法
+□ 指出 AI 重复遗漏某个步骤
+□ 某个 skill 执行效果持续偏低
+□ 发现 AICAM 缺少某类操作的覆盖
+```

@@ -1,0 +1,35 @@
+{
+  "_comment": "Coexistence note: this settings.json (hooks, git tracked) works alongside settings.local.json (permissions, not tracked). They are read simultaneously by Claude Code with no field overlap.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/detect-feedback-signal.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stop-gate.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-evolution.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

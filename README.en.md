@@ -1,6 +1,6 @@
 # AI-Assisted Development Workflow — AICAM
 
-> Version: v1.4.0 | 2026-05-02
+> Version: v2.0.0 | 2026-05-03
 > Author: cham (vccham@gmail.com)
 > This document describes the complete development workflow based on the current `.claude/commands/` + `.claude/skills/`.
 > Each node is labeled with: **Trigger | Role | Output | Next Step**
@@ -17,13 +17,14 @@
 | **v1.3.1** | **2026-04-25** | **CI**: refactored to eco-adaptive pipeline (preflight outputs ecosystem+project_type driving conditional steps) + new oasdiff Breaking Change detection step + Smoke Test filled with actual commands; **Gates**: contract.gate added oasdiff tool + spec archival protocol, coverage.gate fixed corrupted heading + added 5-ecosystem tool table; **Metrics**: M1 switched to git log auto-calculation + cross-platform fallback (macOS stat / Linux date -r); **Resilience**: /diagnose added gate execution completeness check (anti-truncation) + /verify-phase added TDD/Smoke entry count vs gate comparison (anti-bypass) + CLAUDE-template added Known Issues persistent section + /close-phase auto-extracts unresolved issues; **Engineering**: commit-msg hook enforces Conventional Commits + plan-feature sub-agent fault tolerance + commit.md security scan step + prime.md / WORKFLOW.md §11-A doc sync |
 | **v1.3.2** | **2026-04-25** | **Bug fixes**: Python rest-api smoke fallback logic fixed (`[ -n "$SERVER_PID" ]` dead code → `python -c "import uvicorn"` availability check, Flask/Django projects now correctly fallback to `python app.py`); /diagnose Section 5 security tools table added commit-msg hook check row (symlink install status now visible); **Quality**: 5th independent assessment confirms issue density convergence (P0/P1 cleared, 3 new findings all P1/P2 level) |
 | **v1.3.3** | **2026-04-25** | **Security**: /commit security scan upgraded to mandatory hard gate (gitleaks + semgrep + SCA) |
+| **v2.0.0** | **2026-05-03** | Four-layer architecture: product definition (design-brief-builder + design-maker + Pencil/Figma MCP), release (release-builder), evolution (evolution-engine + feedback-writer + EVOLUTION.md + hooks); /onboard role×layer routing; /prime layer-aware loading; /create-prd multi-round mode; CLAUDE-template Active Layers; Skills 4→9; MCPs 3→5 |
 | **v1.4.0** | **2026-05-02** | Playwright MCP interactive mode integration — TDD Gate extended with MCP verification mode, e2e-test Skill adds Phase 1c MCP interactive execution path, MCP Trace three-tier archival architecture (Dashboard summary + Trace details + archival traceability), agent-browser and Playwright MCP clearly differentiated |
 
 ---
 
 ## 1. Project Overview
 
-**AICAM** (AI-assisted Code workflow for AI Masters) is a reusable AI-assisted development workflow system designed to provide Claude Code with a standardized 5-phase development lifecycle (Requirements → Planning → Implementation → Verification → Archival), ensuring that every feature from conception to submission follows a documented and auditable process.
+**AICAM** (AI-assisted Code workflow for AI Masters) is a cross-role AI collaboration framework, serving PMs, designers, developers, and full-stack talents, covering the complete lifecycle from product definition to code delivery to release.
 
 ### Key Features
 
@@ -36,23 +37,49 @@
 | **Progressive Disclosure** | Context loaded on demand; planning phase adds only minimal necessary context to avoid context inflation |
 | **Self-Maintaining Context** | Archival phase automatically compresses historical knowledge; CLAUDE.md iteration logs auto-summarize when exceeding 150 lines |
 | **Evidence-Driven Verification** | Every verification conclusion must be backed by file reads or command output — no speculative conclusions |
+| **Four-Layer Architecture** | Product Definition + Development Quality + Release + Evolution, role-based activation |
+| **Evolution System** | Hooks auto-capture feedback signals, frequency-driven rule upgrades, smarter with use |
+| **Design-to-Code Pipeline** | Figma MCP-driven prototyping, design specs as highest-priority implementation reference |
+
+### Four-Layer Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Product Definition  PM/Design: discover → create-prd → design │
+├──────────────────────────────────────────────────────────┤
+│ Development Quality  Dev: plan → execute → verify → close    │
+├──────────────────────────────────────────────────────────┤
+│ Release              DevOps/Full-stack: release-builder       │
+├──────────────────────────────────────────────────────────┤
+│ Evolution            All (background): hooks → feedback → rules│
+└──────────────────────────────────────────────────────────┘
+```
 
 ### System Components
 
 | Component | Path | Count | Purpose |
 |-----------|------|-------|---------|
 | **Commands** | `.claude/commands/` | 15 | `/discover`, `/create-prd`, `/ref-research`, `/create-rules`, `/init-project`, `/prime`, `/plan-feature`, `/execute`, `/code-review`, `/verify-phase`, `/close-phase`, `/commit`, `/hotfix`, `/diagnose`, `/onboard` |
-| **Skills** | `.claude/skills/` | 4 | `frontend-design`, `api-contract-first`, `e2e-test` (merged agent-browser), `backend-test` |
+| **Skills** | `.claude/skills/` | 9 | `frontend-design`, `api-contract-first`, `e2e-test` (merged agent-browser), `backend-test`, `design-brief-builder`, `design-maker`, `feedback-writer`, `evolution-engine`, `release-builder` |
 | **Gates** | `.claude/gates/` | 6 | `tdd.gate.md`, `smoke.gate.md`, `security.gate.md`, `contract.gate.md`, `destructive-op.gate.md`, `coverage.gate.md` |
 | **Reference Docs** | `.claude/reference/` | 3 + 1 subdir | `index.md`, `plan-template.md`, `spec-lite-template.md`; `test-strategies/` subdir with 6 type-specific strategies (cli/mobile/rest-api/tauri/web/worker) |
 | **Template** | `.claude/CLAUDE-template.md` | 1 | Seed file for CLAUDE.md during new project initialization (includes Simplicity First / Surgical Changes rules + Skill activation rules + security scanning guidance + test command categories) |
-| **Plans & Specs** | `.agents/` | 2 subdirectories | `plans/` stores implementation plans, `specs/` stores lightweight specs |
+| **Plans & Specs** | `.agents/` | 3+ subdirectories | `plans/` stores implementation plans, `specs/` stores lightweight specs, `feedback/` stores evolution layer feedback records |
 
 ### Usage
+
+**Choose your role:**
+
+| Role | Entry Point |
+|------|-------------|
+| PM / Designer | Run `/onboard`, select your role, AI guides subsequent workflow |
+| Developer | `cp -r .claude/ .githooks/ .github/ .serena/ .agents/ <your-project>/` → `/onboard` |
+| Full-stack Independent | `/onboard` → select "Full-stack Independent", walk the full pipeline |
 
 1. **New Project**: Copy the required files to your project root, then run `/discover` to begin:
    ```bash
    cp -r .claude/ /path/to/your/project/
+   cp -r .agents/ /path/to/your/project/                         # Evolution layer feedback directory structure
    cp -r .github/workflows/ /path/to/your/project/.github/      # CI gates (GitHub Actions only)
    cp -r .githooks/ .commitlintrc.yaml .gitleaks.toml /path/to/your/project/  # Local hooks
    cd /path/to/your/project && git config core.hooksPath .githooks

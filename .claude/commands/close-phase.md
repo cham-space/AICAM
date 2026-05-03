@@ -320,3 +320,26 @@ Check root-level and `{PROJECT_ROOT}` markdown files for staleness:
 - **Never auto-archive without user review** of the journal entry
 - **Never archive active/in-progress phase** artifacts
 - **Preserve git history** — auto-detects git repo and uses `git mv` when available, falls back to `mv`
+
+### Step 10：进化系统集成（自动）
+
+> ⚠️ 实施说明：close-phase.md 当前最后一步为 Step 9（Clean Up Root-Level Stale Docs），本步骤追加为 Step 10。
+
+归档完成后，自动执行以下操作：
+
+**10-1: 提取 lessons 写入 feedback/**
+
+从 `.agents/plans/{phase}.summary.md` 中读取 `## Lessons Learned` 节：
+- 对每条 lesson，判断其类别（process/quality/skill-gap/skill-issue）
+- 调用 feedback-writer skill，将每条 lesson 写入 `.agents/feedback/`
+- 标注来源：`source: close-phase | phase: {N}`
+
+**10-2: 检查毕业候选**
+
+读取 `.agents/feedback/index.md`，检查是否有 `candidate` 状态条目：
+- 若有候选 → 输出提示：`💡 进化建议已就绪（{N}条），下次 /prime 时将生成建议`
+- 若无候选 → 静默，不输出
+
+**10-3: 更新 Active Layers**
+
+提示用户手动更新 CLAUDE.md 中 `## Active Layers` 的开发质量层进度（Phase N/M）。
